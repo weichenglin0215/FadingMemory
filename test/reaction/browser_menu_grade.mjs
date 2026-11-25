@@ -1,5 +1,5 @@
 // 瀏覽器實測：主選單的「🏆我的成績」「👑我的強項」與學歷階段（V1.57.4）。用無頭 Chrome 開真的 index.html：
-//   一、漢堡選單：設定、🏆我的成績、👑我的強項、安裝與離線（順序）；「👑我的強項」打開雷達圖：每個分類一條軸、六圈、玩家多邊形、分類名稱＋階段、下面一列一類
+//   一、漢堡選單：設定、🏆我的成績、👑我的強項、安裝與離線、我有話要說（順序）；「👑我的強項」打開雷達圖：每個分類一條軸、六圈、玩家多邊形、分類名稱＋階段、下面一列一類
 //   二、雷達圖跟著現有分類走：刪掉一款遊戲、改一款遊戲的分類（在頁面裡改 FMMenu.GAME_CELLS）之後再打開，結果跟著變
 //   三、「選一個想玩的遊戲」：標題列右邊（向右靠齊）有 🏆、👑 兩顆按鈕；按了彈窗疊在全螢幕列表上面（z-index、真的點得到彈窗）；兩顆按鈕開的彈窗標題是「🏆我的成績」「👑我的強項」
 //   四、格子右上角：世界名次 1～3 金銀銅牌、4～30 名細黑框白底黑字小圓牌、超出 30 名（或沒名次）但玩過的顯示學歷階段小藥丸；沒玩過的什麼都沒有
@@ -42,7 +42,7 @@ try {
   // ═══ 一、漢堡選單 ═══
   await click('#nav-btn'); await sleep(200);
   const items = await js('JSON.stringify([].map.call(document.querySelectorAll(".nav-pop__item"), function (e) { return e.textContent.replace(/\\s+/g, ""); }))').then(JSON.parse);
-  ok(items.join('｜') === '設定｜🏆我的成績｜👑我的強項｜安裝與離線', '漢堡選單四項（順序）：' + items.join('｜'));
+  ok(items.join('｜') === '設定｜🏆我的成績｜👑我的強項｜安裝與離線｜我有話要說', '漢堡選單五項（順序）：' + items.join('｜'));
   await click('#nav-strengths'); await sleep(400);
   ok(await js('!!document.querySelector(".dlg--strengths")'), '「👑我的強項」彈窗打開了');
   const title = await js('document.querySelector(".dlg--strengths .dlg__title").textContent');
@@ -54,11 +54,20 @@ try {
   const model = await js('JSON.stringify(FMStrengths.model())').then(JSON.parse);
   const played = model.filter(r => r.value > 0);
   ok(rad.dots === played.length && played.length === cats.length, '有成績的分類各一個頂點（' + rad.dots + ' 個）：' + played.map(r => r.name + r.value).join('、'));
-  ok(model.every((r, i) => rad.grades[i] === (r.stage >= 0 ? ['小學', '中學', '高中', '大學', '碩士', '博士'][r.stage] : '未挑戰')), '每個分類名稱下面寫著階段：' + rad.grades.join('、'));
-  ok(rad.w > 300 && rad.w <= 410 && rad.h > 250, '雷達圖大小合理（' + rad.w.toFixed(0) + '×' + rad.h.toFixed(0) + '）');
+  ok(model.every((r, i) => rad.grades[i] === (r.value > 0 ? ['小學', '中學', '高中', '大學', '碩士', '博士'][r.value - 1] : '都沒玩過')), '每個分類名稱下面寫著階段：' + rad.grades.join('、'));
+  ok(rad.w >= 440 && rad.h >= 390, '雷達圖盡量大（' + rad.w.toFixed(0) + '×' + rad.h.toFixed(0) + 'px）');
   const rows = await js('JSON.stringify([].map.call(document.querySelectorAll(".str-row"), function (e) { return e.textContent; }))').then(JSON.parse);
-  ok(rows.length === cats.length && !rows.join('').includes('gone'), '下面一類一列（' + rows.length + ' 列），已經不存在的遊戲 gone 被忽略');
-  const dlgBox = await rectOf('.dlg--strengths .dlg__card'); ok(dlgBox && dlgBox.bottom <= 850 && dlgBox.top >= 0, '彈窗放得進畫面（' + dlgBox.top.toFixed(0) + '～' + dlgBox.bottom.toFixed(0) + '）');
+  ok(rows.length === cats.length && model.every((r, i) => rows[i] === r.name + (r.value > 0 ? ['小學', '中學', '高中', '大學', '碩士', '博士'][r.value - 1] : '都沒玩過') + r.sum + ' 總分 / ' + r.count + ' 款'), '下面一類一列「名稱 階段 總分 / 款數」：' + rows[0]);
+  ok(model.every(r => r.value === (r.sum > 0 ? Math.max(1, Math.round(r.sum / r.count)) : 0)), '分數＝總分 ÷ 款數 四捨五入、最少 1（小學）：' + model.map(r => r.name + r.sum + '/' + r.count + '→' + r.value).join('、'));
+  ok(!(await js('document.querySelector(".dlg--strengths").textContent.indexOf("每類取玩得最好") >= 0')), '「每類取玩得最好的一款…」說明拿掉了');
+  const dlgBox = await rectOf('.dlg--strengths .dlg__card'), stageBox = await rectOf('#stage');
+  ok(dlgBox.w >= stageBox.w - 20 && dlgBox.h >= stageBox.h - 20, '彈窗是全畫面（卡片 ' + dlgBox.w.toFixed(0) + '×' + dlgBox.h.toFixed(0) + '，舞台 ' + stageBox.w.toFixed(0) + '×' + stageBox.h.toFixed(0) + '）');
+  const radius = await js('getComputedStyle(document.querySelector(".dlg--strengths .dlg__card")).borderTopLeftRadius + " " + getComputedStyle(document.querySelector(".dlg--strengths .dlg__card")).borderBottomRightRadius');
+  ok(parseFloat(radius) > 8, '保留四個圓角（' + radius + '）');
+  const fit = await js('(function () { var c = document.querySelector(".dlg--strengths .dlg__card"); return c.scrollHeight - c.clientHeight; })()');
+  ok(fit <= 1, '內容剛好放得下、不用捲（超出 ' + fit + 'px）');
+  const colors = await js(`JSON.stringify((function () { var cs = getComputedStyle(document.documentElement); var probe = document.createElement('div'); document.body.appendChild(probe); var out = []; for (var v = 1; v <= 6; v++) { var s = document.createElement('span'); s.className = 'str-row__stage str-row__stage--g' + v; document.querySelector('.str-list').appendChild(s); out.push(getComputedStyle(s).backgroundColor); s.remove(); } probe.remove(); return out; })())`).then(JSON.parse);
+  ok(new Set(colors).size === 6, '小學～博士六個顏色都不一樣（紅橙黃綠藍紫）：' + colors.join(' '));
   const shot1 = await cdp.send('Page.captureScreenshot', { format: 'png' });
   await click('.dlg--strengths .btn'); await sleep(300);
   ok(!(await js('!!document.querySelector(".dlg--strengths")')), '按「關閉」關掉了');

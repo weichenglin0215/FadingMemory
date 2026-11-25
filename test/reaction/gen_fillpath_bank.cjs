@@ -83,6 +83,10 @@ const PROF = {
   block: { raw: [0.25, 0.32, 0.40], guess: [0.06, 0.10, 0.14], deep: [0.04, 0.07, 0.10] }
 };
 const W_STRUCT = 3;          // 結構違反的扣分倍數
+// 多色填滿的交錯要求（V1.57.5）：每一條路用一條直線切出來，至少要分錯幾格（MIXN，依路數 2／3／4）、至少分錯比較小那一邊的幾 %（MIXR）；三種強度
+const MIXN = { 2: [2, 2, 3], 3: [1, 2, 2], 4: [1, 1, 2] };
+const MIXR = { 2: [15, 20, 26], 3: [12, 16, 22], 4: [10, 14, 20] };
+const W_MIX = 3;             // 交錯要求違反的加重倍數（這是玩家回饋的重點）
 // 結構違反的程度（0＝完全合格；每一項是「差多少 ÷ 門檻」，加起來）。m＝FP.analyze 加上 FP.human 的結果
 function viol(kind, prof, m, tiles, k) {
   const P = PROF[kind]; let v = 0;
@@ -90,6 +94,7 @@ function viol(kind, prof, m, tiles, k) {
   if (kind === 'multi') {
     const avg = tiles / k; v += 2 * lowV(m.lo, Math.max(3, Math.round(avg * P.lo[prof]))); v += highV(m.hi, Math.round(avg * P.hi[prof]));
     if (k >= 3 && m.hid !== undefined) v += lowV(m.hid, P.hid[prof]);
+    if (m.mix !== undefined) v += W_MIX * (lowV(m.mix, MIXN[k][prof]) + lowV(m.mixr, MIXR[k][prof]));
   }
   if (m.raw !== undefined) v += lowV(m.raw, Math.round(tiles * P.raw[prof])) + lowV(m.guess, Math.floor(tiles * P.guess[prof])) + lowV(m.deep, Math.floor(tiles * P.deep[prof]));
   return v;
@@ -97,8 +102,10 @@ function viol(kind, prof, m, tiles, k) {
 // 只看路長的那一部分（還沒做人類分析之前，先用它擋掉明顯不合格的）
 function pathViol(kind, prof, m, tiles, k) { return viol(kind, prof, { lo: m.lo, hi: m.hi }, tiles, k); }
 // 每一題最後存進題庫的結構數字（FP.analyze 的一部分＋FP.human）
-const KEEP = ['lo', 'hi', 't3', 'x4', 'x4d', 'raw', 'dec', 'd3', 'bits', 'guess', 'deep', 'trap', 'hid'];
-function measureAll(p, first) { const a = FP.analyze(p, first), hm = FP.human(p, first), m = {}; KEEP.forEach(key => { m[key] = key in hm ? hm[key] : a[key]; }); return { m, hx: hm.hx }; }
+const KEEP = ['lo', 'hi', 't3', 'x4', 'x4d', 'raw', 'dec', 'd3', 'bits', 'guess', 'deep', 'trap', 'hid', 'mix', 'mixr'];
+// 交錯程度（V1.57.5 玩家回饋）：看「全部的解」裡最容易被直線切開的那一個（玩家走得出任何一組解都算過關，只要有一組好切就太簡單）
+function mixAll(p, sols) { let mix = Infinity, mixr = Infinity; for (const s of sols) { const r = FP.interlock(p, s); mix = Math.min(mix, r.mix); mixr = Math.min(mixr, r.mixr); } return { mix: sols.length ? mix : 0, mixr: sols.length ? mixr : 0 }; }
+function measureAll(p, first, sols) { const a = FP.analyze(p, first), hm = FP.human(p, first), mx = mixAll(p, sols && sols.length ? sols : [first]), m = {}; KEEP.forEach(key => { m[key] = key in mx ? mx[key] : (key in hm ? hm[key] : a[key]); }); return { m, hx: hm.hx }; }
 
 function mulberry(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 
@@ -115,12 +122,12 @@ function connected(w, h, mask) {
 function evaluate(w, h, mask, starts, cfg, rand, prof) {
   const k = starts.length;
   const p = { w, h, mask, starts, k, tiles: 0 }; for (let i = 0; i < w * h; i++) p.tiles += mask[i];
-  const g = FP.graph(p), s = FP.solve(g, starts, { limit: 3, budget: 600000, level: 2 });
+  const g = FP.graph(p), s = FP.solve(g, starts, { limit: 3, budget: 600000, level: 2, keep: true });
   if (s.aborted || s.count === 0) return null;
   const a = FP.analyze(p, s.first), base = -0.4 * Math.abs(Math.log(1 + s.nodes) - Math.log(1 + cfg.nT)) - 2.5 * (s.count - 1);
   const vp = pathViol(cfg.kind, prof, a, p.tiles, k);
   if (vp > 1.5) return { count: s.count, n3: s.nodes, mean: 0, aborted: 0, tiles: p.tiles, ds: base - 6, v: vp, v0: 9, m: a, k, skip: true, score: base - 6 - W_STRUCT * vp };   // 路長太差：不必再花時間做人類分析
-  const q = measureAll(p, s.first), v = viol(cfg.kind, prof, q.m, p.tiles, k), v0 = viol(cfg.kind, 0, q.m, p.tiles, k);
+  const q = measureAll(p, s.first, s.sols), v = viol(cfg.kind, prof, q.m, p.tiles, k), v0 = viol(cfg.kind, 0, q.m, p.tiles, k);
   const ds = base - Math.abs(Math.log(1 + q.hx) - Math.log(1 + cfg.eT));
   return { count: s.count, n3: s.nodes, mean: q.hx, aborted: 0, tiles: p.tiles, ds, v, v0, m: q.m, k, score: ds - W_STRUCT * v };
 }
@@ -199,9 +206,9 @@ function poolFiles(dir, kind, t) { try { return fs.readdirSync(dir).filter(f => 
 function loadTier(dir, kind, t) { let all = []; for (const f of poolFiles(dir, kind, t)) { try { all = all.concat(JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'))); } catch (e) { } } return all; }
 // 量一題：回傳 { m 結構, v0, tiles, k, c, e } 或 null（無解）
 function measure(e) {
-  const p = FP.parse(e.s), g = FP.graph(p), s = FP.solve(g, p.starts, { limit: 3, budget: 2000000, level: 2 });
+  const p = FP.parse(e.s), g = FP.graph(p), s = FP.solve(g, p.starts, { limit: 3, budget: 2000000, level: 2, keep: true });
   if (s.aborted || s.count < 1) return null;
-  const q = measureAll(p, s.first); return { p, m: q.m, hx: q.hx, c: s.count };
+  const q = measureAll(p, s.first, s.sols); return { p, m: q.m, hx: q.hx, c: s.count };
 }
 function cmdBuild(dir, keep) {
   const out = { block: [], multi: [] }, stat = [];
@@ -231,7 +238,7 @@ function cmdBuild(dir, keep) {
   let text = '/* ═══════════════════════════════════════════════════════════════════\r\n' +
     '   fillpath_bank.js — 「一筆填滿」「多色填滿」的題庫（V1.57.3.0；V1.57.3.1 加上結構數字）。這個檔案是 test/reaction/gen_fillpath_bank.cjs 離線搜尋產生的，不要手改。\r\n' +
     '   block（一筆填滿，1 個起點）、multi（多色填滿，2～4 個起點）各分 13 個難度級（第 0 級最簡單、第 12 級最大最難）；\r\n' +
-    '   每一題 { s: 題目字串, c: 解數（最多數到 3）, e: 試走難度, t: 格子數, k: 起點數, m: 結構數字 }；m 的意思見 js/fillpath_core.js 的 FP.analyze（lo／hi 最短最長路、tr 轉彎比例、st 最長直線、jn 岔路口、x4 十字路口、co 走廊比例、ch 選擇比例、cr 交叉數、sd 起點距離、vd 空洞數）。\r\n' +
+    '   每一題 { s: 題目字串, c: 解數（最多數到 3）, e: 試走難度, t: 格子數, k: 起點數, m: 結構數字 }；m 的意思見 js/fillpath_core.js 的 FP.analyze（lo／hi 最短最長路、tr 轉彎比例、st 最長直線、jn 岔路口、x4 十字路口、co 走廊比例、ch 選擇比例、cr 交叉數、sd 起點距離、vd 空洞數、mix／mixr 路跟路的交錯程度＝FP.interlock）。\r\n' +
     '   題目字串：每一列用 / 隔開；# 有格子、. 空洞、A～D 起點（A 是第 0 種顏色）。格式與讀法見 js/fillpath_core.js。\r\n' +
     '   ═══════════════════════════════════════════════════════════════════ */\r\n' +
     'window.FM_FILLPATH_BANK = {\r\n';

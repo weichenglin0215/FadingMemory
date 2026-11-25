@@ -348,12 +348,12 @@
         /* 玩家意見（結算彈窗的「我有話要說」）：跟 SQL 的 MF_submit_feedback 一樣檢查，記在 F.feedback；暱稱由帳號帶入 */
         if (name === 'MF_submit_feedback') {
             var fg = b.p_game_id, msg = String(b.p_message || '').trim();
-            if (!specOf(fg) && !validGame(fg)) return e('unknown_game');
+            if (fg !== 'site' && !specOf(fg) && !validGame(fg)) return e('unknown_game');   /* 'site'＝主選單的全站意見 */
             if (Array.from(msg).length < 2) return e('bad_args');
             if (b.p_token ? !authed(b.p_player_id, b.p_token) : !!F.accounts[b.p_player_id]) return e('bad_token');
             F.feedback = F.feedback || [];
             if (F.feedback.filter(function (x) { return x.player === b.p_player_id; }).length >= 20) return e('too_many');
-            F.feedback.push({ game: fg, player: b.p_player_id, nick: b.p_token && F.accounts[b.p_player_id] ? F.accounts[b.p_player_id].nick : null, message: msg.slice(0, 300), version: b.p_version, at: Date.now() });
+            F.feedback.push({ game: fg, player: b.p_player_id, nick: b.p_token && F.accounts[b.p_player_id] ? F.accounts[b.p_player_id].nick : null, message: msg.slice(0, 600), version: b.p_version, at: Date.now() });
             return respond({ ok: true, saved: true }, L);
         }
         return respond(null, 10);

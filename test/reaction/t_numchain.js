@@ -1,7 +1,7 @@
 // 連號長龍（numchain）的純函式檢查：
 //   · 盤面大小隨關卡變大：第 1 關 5×7、第 20 關起 8×11（玩家指定）；連 n 格得 1＋2＋…＋n 分；數字高度是格子高度的 85%
-//   · 選方格：拖曳（拖過的格子被挑選、拖回上一格取消）、點選（點一下挑選、再點一下已挑選的就放棄）；挑選沒有先後順序，按「確定」才檢查排不排得成一串（chainOrder）
-//   · 「快速拖曳」預設不勾、「浮窗」預設勾（玩家指定）
+//   · 選方格：只有拖曳一種（拖到相鄰又差 1 的格子就接上、拖回上一格收回），手指一離開就計算；沒有「確定」「快速拖曳」，也沒有點選
+//   · 「浮窗」預設不勾（玩家指定）
 //   · 收走之後：每一欄剩下的方格往下掉到底（collapse）、缺的格子補新方格（fillNew）；新方格最後停在哪一格，掉下來之前就知道
 //   · 推算法（fillNew／pickValue／potentialOf）：依「停下來之後四周的數字」挑新方格的數字；ASSIST_P／AIM_LEN／PICK_K／BREAK_P 隨關卡變難；
 //     任何時候盤面上都至少有一串 MIN_BEST_LEN 格可以拿
@@ -21,8 +21,8 @@ ok(Math.abs(T.DIGIT_H - 0.85) < 1e-9, '數字高度是格子高度的 85%（玩�
 ok(T.MAX_LEVEL === 90 && T.RAMP_LEVELS === 30, '標準難度曲線：RAMP_LEVELS 30、MAX_LEVEL 90');
 ok(T.chainScore(3) === 6 && T.chainScore(4) === 10 && T.chainScore(5) === 15 && T.chainScore(14) === 105, '連 n 格＝1＋2＋…＋n 分：3→6、4→10、5→15、14→105');
 ok(T.MIN_CHAIN === 3, '至少連 3 格');
-ok(T.DEFAULT_LOUPE === true && T.DEFAULT_FAST === false, '「浮窗」預設勾選、「快速拖曳」預設不勾選（玩家指定）');
-ok(T.getOpts().loupe === true && T.getOpts().fast === false, '沒有存過選擇時，用預設值');
+ok(T.DEFAULT_LOUPE === false && !('DEFAULT_FAST' in T), '「浮窗」預設不勾（玩家指定）；沒有「快速拖曳」這個選項了');
+ok(T.getOpts().loupe === false && !('fast' in T.getOpts()), '沒有存過選擇時，用預設值（浮窗不勾）');
 // ── 棋盤大小隨關卡 ──
 { const d1 = T.dimsFor(1), d20 = T.dimsFor(20);
   ok(d1.w === 5 && d1.h === 7, '第 1 關 5×7（玩家指定）：' + d1.w + '×' + d1.h);
@@ -81,40 +81,27 @@ for (const gr of [G5, G6, G8]) {
     ok((mine !== null) === found, '排序跟暴力解一致（' + pick.join() + ' → ' + (found ? '排得成' : '排不成') + '）');
     if (mine) ok(mine.length === k && mine.every((m, j) => j === 0 || (T.adjacent(G8, mine[j - 1], m) && Math.abs(sm[m] - sm[mine[j - 1]]) === 1)), '排出來的每一步都合法'); } }
 
-// ── 拖曳與點選 ──
+// ── 拖曳 ──
 { const vals = new Array(G8.n).fill(9);
   [2, 3, 4, 3, 2, 1, 1].forEach((v, i) => { vals[i] = v; });
   vals[G8.w + 2] = 5; vals[40] = null;                         // (1,2)=5 在 4 的正下方；一個空格
   const fresh = () => T.newState({ gr: G8, vals: vals.slice(), level: 1 });
   let st = fresh();
   ok(st.vals !== vals && st.sel.length === 0 && st.score === 0 && st.level === 1 && st.gr === G8, 'newState：複製盤面、沒有挑選、得分 0');
-  // 拖曳：按下去就挑選，拖過相鄰差 1 的格子也挑選
-  let ss = T.beginDrag(st, 0);
-  ok(st.sel.join() === '0' && !ss.moved && !ss.startSel, '按在沒挑選的格子上：挑選它');
-  ok(T.dragStep(st, ss, 1) === 'add' && T.dragStep(st, ss, 2) === 'add' && st.sel.join() === '0,1,2' && ss.moved, '拖過 3、4：一路挑選');
-  ok(T.dragStep(st, ss, 2) === null, '還在同一格：什麼都不發生');
-  ok(T.dragStep(st, ss, 4) === null && st.sel.length === 3, '跳過格子（3 跟 5 不相鄰）不行');
-  ok(T.dragStep(st, ss, G8.w + 2) === 'add' && st.sel.join() === '0,1,2,' + (G8.w + 2), '往下拖到 5（4→5）');
-  ok(T.dragStep(st, ss, 2) === 'back' && st.sel.join() === '0,1,2', '拖回上一格＝這次拖曳挑選的那一格取消');
-  ok(T.dragStep(st, ss, 3) === 'add' && T.dragStep(st, ss, 4) === 'add' && T.dragStep(st, ss, 5) === 'add' && st.sel.length === 6, '4→3→2→1 往下降也可以');
-  ok(T.dragStep(st, ss, 6) === null, '1→1 差 0 不行');
-  ok(T.dragStep(st, ss, 1) === null, '已經挑選的格子不能再走');
-  ok(T.dragStep(st, ss, 40) === null && T.dragStep(st, ss, -1) === null && T.dragStep(st, ss, 999) === null, '空格、棋盤外不行');
-  ok(T.endDrag(st, ss) === null && st.sel.length === 6, '拖過之後手指離開：挑選留著');
-  // 點選：點沒挑選的＝挑選；再點＝放棄
-  st = fresh(); ss = T.beginDrag(st, 3); ok(T.endDrag(st, ss) === null && st.sel.join() === '3', '點一下沒挑選的格子 → 挑選');
-  ss = T.beginDrag(st, 3); ok(ss.startSel && st.sel.join() === '3', '再按在已挑選的格子上：先不動');
-  ok(T.endDrag(st, ss) === 'drop' && st.sel.length === 0, '點第二次（手指沒動）→ 放棄這一格');
-  st = fresh(); [0, 1, 2].forEach(k => { const s = T.beginDrag(st, k); T.endDrag(st, s); });
-  ok(st.sel.join() === '0,1,2', '連續點 3 格：都被挑選（不需要相鄰也不需要照順序：點選時不檢查）');
-  ss = T.beginDrag(st, 1); T.endDrag(st, ss); ok(st.sel.join() === '0,2', '點中間那格 → 只放棄它（0、2 留著）');
-  // 從已挑選的格子開始往外拖：可以接續
-  st = fresh(); ss = T.beginDrag(st, 0); T.dragStep(st, ss, 1); T.endDrag(st, ss);
-  ss = T.beginDrag(st, 1); ok(ss.startSel && T.dragStep(st, ss, 2) === 'add' && st.sel.join() === '0,1,2', '從已挑選的格子開始再拖：接著往外挑選');
-  ok(T.endDrag(st, ss) === null && st.sel.length === 3, '拖過就不算「點一下」：不會放棄起點');
-  // 拖回上一格不會取消「先前就挑選過」的格子
-  st = fresh(); T.endDrag(st, T.beginDrag(st, 2));
-  ss = T.beginDrag(st, 3); T.dragStep(st, ss, 4); ok(T.dragStep(st, ss, 3) === 'back' && st.sel.join() === '2,3', '拖回去：這次拖曳挑選的 4 取消，起點 3 和先前挑選的 2 還在'); }
+  ok(T.dragStep(st, 1) === null && st.sel.length === 0, '還沒按下去：拖不出東西');
+  T.beginDrag(st, 0);
+  ok(st.sel.join() === '0', '按下去：從這一格開始一串');
+  ok(T.dragStep(st, 1) === 'add' && T.dragStep(st, 2) === 'add' && st.sel.join() === '0,1,2', '拖過 3、4：一路接上');
+  ok(T.dragStep(st, 2) === null, '還在同一格：什麼都不發生');
+  ok(T.dragStep(st, 4) === null && st.sel.length === 3, '跳過格子（3 跟 5 不相鄰）不行');
+  ok(T.dragStep(st, G8.w + 2) === 'add' && st.sel.join() === '0,1,2,' + (G8.w + 2), '往下拖到 5（4→5）');
+  ok(T.dragStep(st, 2) === 'back' && st.sel.join() === '0,1,2', '拖回上一格＝收回最後一格');
+  ok(T.dragStep(st, 3) === 'add' && T.dragStep(st, 4) === 'add' && T.dragStep(st, 5) === 'add' && st.sel.length === 6, '4→3→2→1 往下降也可以');
+  ok(T.dragStep(st, 6) === null, '1→1 差 0 不行');
+  ok(T.dragStep(st, 1) === null, '已經在串裡的格子不能再走');
+  ok(T.dragStep(st, 40) === null && T.dragStep(st, -1) === null && T.dragStep(st, 999) === null, '空格、棋盤外不行');
+  ok(T.dragStep(st, 4) === 'back' && T.dragStep(st, 3) === 'back' && T.dragStep(st, 2) === 'back' && T.dragStep(st, 1) === 'back' && T.dragStep(st, 0) === 'back' && st.sel.join() === '0' && T.dragStep(st, 0) === null, '可以一路拖回起點（起點本身收不掉）');
+  T.beginDrag(st, 3); ok(st.sel.join() === '3', '手指重新按下去：開始新的一串（上一串不留著）'); }
 
 // ── 收走（commit）──
 { const vals = new Array(G8.n).fill(9);
@@ -253,7 +240,7 @@ ok(T.bounce(0) === 0 && T.bounce(1) === 1 && T.bounce(1.5) === 1, 'bounce：起�
 // ── 評語、登記資料 ──
 ok(T.rating(25) !== T.rating(12) && T.rating(12) !== T.rating(6) && T.rating(6) !== T.rating(3) && T.rating(3) !== T.rating(0), '評語依關數分級');
 ok(G.id === 'numchain' && G.name === '連號長龍' && Array.from(G.name).length <= 5, '登記資料：代號 numchain、名稱「連號長龍」（≤5 字）');
-ok(/差 1/.test(G.rule) && /至少連 3 格/.test(G.rule) && /往下掉/.test(G.rule) && /不限拖曳次數/.test(G.rule) && /點/.test(G.rule) && /快速拖曳/.test(G.rule) && /浮窗/.test(G.rule) && /確定/.test(G.rule) && (G.rule.match(/\*\*/g) || []).length % 2 === 0, '玩法說明：差 1、至少 3 格、點選、確定、快速拖曳、浮窗、往下掉補新的、不限拖曳次數，** 成對');
+ok(/差 1/.test(G.rule) && /至少連 3 格/.test(G.rule) && /手指一離開/.test(G.rule) && /往下掉/.test(G.rule) && /不限拖曳次數/.test(G.rule) && /浮窗/.test(G.rule) && !/確定|快速拖曳|點一下|用點的/.test(G.rule) && (G.rule.match(/\*\*/g) || []).length % 2 === 0, '玩法說明：差 1、至少 3 格、手指一離開就收走、浮窗、往下掉補新的、不限拖曳次數，沒有提到確定／快速拖曳／點選，** 成對');
 ok(G.score.better === 'max' && G.score.max === T.MAX_LEVEL, '成績：過幾關，越大越好');
 // ── 檔案接線 ──
 { const boot = fs.readFileSync(ROOT + 'js/boot.js', 'utf8'), menu = fs.readFileSync(ROOT + 'js/menu.js', 'utf8'), src = fs.readFileSync(ROOT + 'js/reaction_numchain.js', 'utf8'), ui = fs.readFileSync(ROOT + 'js/numgrid_ui.js', 'utf8');
@@ -262,7 +249,9 @@ ok(G.score.better === 'max' && G.score.max === T.MAX_LEVEL, '成績：過幾關�
   ok(fs.existsSync(ROOT + 'img/reaction/numchain.png'), '縮圖檔存在');
   ok(/api\.setInfo\(/.test(ui) && !/剩 '/.test(ui) && !/拖曳剩/.test(ui), '得分放在標題列右邊（setInfo），沒有「剩 X／X 次」');
   ok(!/drawBubble/.test(ui) && !/drawBubble/.test(src), '拖曳時盤面上沒有藍框白底的提示字（drawBubble 拿掉了）');
-  ok(/text: '浮窗'/.test(ui) && /text: '快速拖曳'/.test(ui) && /text: '確定'/.test(ui) && /numgrid-bar/.test(ui), '介面最下方有「浮窗」「快速拖曳」兩個勾選框和「確定」按鈕（共用介面）');
+  ok(/text: '浮窗'/.test(ui) && !/text: '快速拖曳'|text: '確定'|numgrid-ok/.test(ui) && (ui.match(/type: 'checkbox'/g) || []).length === 1 && /numgrid-bar/.test(ui), '介面最下方只剩「浮窗」一個勾選框（沒有「快速拖曳」「確定」）');
+  ok(/'pointerup', up/.test(ui) && /function up\(e\) \{[\s\S]{0,200}runCommit\(\);/.test(ui), '手指一離開就計算');
+  ok(!/numgrid-ok/.test(fs.readFileSync(ROOT + 'css/numgrid.css', 'utf8')), 'css 裡「確定」按鈕的樣式也拿掉了');
   ok(/NG\.mount\(root, ctx/.test(src), '連號長龍把規則交給共用介面 NG.mount');
   const cssRaw = fs.readFileSync(ROOT + 'css/numgrid.css', 'utf8');
   ok(/pointer-events: none/.test(cssRaw), '浮窗不接收手指事件（不會擋到拖曳）');

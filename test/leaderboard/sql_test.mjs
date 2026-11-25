@@ -278,9 +278,9 @@ for (const g of Object.keys(specs)) {
   eq(await fb('speed', uuid(902), '沒有暱稱', '   ', ''), { ok: true, saved: true }, '意見：匿名＋空白版本當作沒有');
   const r2 = await rows(`player_id = $1::uuid`, [uuid(902)]);
   ok(r2[0].nickname === null && r2[0].app_version === null, '意見：匿名的暱稱與空白版本存成 null');
-  // 太長：只留 300 個字
-  eq(await fb('speed', uuid(903), '長'.repeat(500)), { ok: true, saved: true }, '意見：超長內容仍可寫入');
-  ok((await rows(`player_id = $1::uuid`, [uuid(903)]))[0].message.length === 300, '意見：只留前 300 個字');
+  // 太長：只留 600 個字（跟網頁的上限一致）
+  eq(await fb('speed', uuid(903), '長'.repeat(900)), { ok: true, saved: true }, '意見：超長內容仍可寫入');
+  ok((await rows(`player_id = $1::uuid`, [uuid(903)]))[0].message.length === 600, '意見：只留前 600 個字');
   // 10 分鐘內重複送一樣的內容：不重複寫入
   eq(await fb('speed', uuid(901), '第一行\n\n第二行 有控制字元'), { ok: true, saved: false, duplicate: true }, '意見：重複送出不重複寫入');
   ok((await rows(`player_id = $1::uuid`, [uuid(901)])).length === 2, '意見：重複的不增加列數');
@@ -294,6 +294,11 @@ for (const g of Object.keys(specs)) {
   // 一天以前的不算進上限
   await db.exec(`update public."MF_feedback" set created_at = now() - interval '25 hours' where player_id = '${uuid(904)}'`);
   eq(await fb('spot', uuid(904), '隔天可以再寄'), { ok: true, saved: true }, '意見：超過 24 小時的不算進上限');
+  // 主選單「我有話要說」的全站意見：代號 'site'（MF_games 裡是停用的，只有意見函式放行）
+  eq(await fb('site', uuid(971), '整個網站的意見'), { ok: true, saved: true }, "意見：全站意見（'site'）寫得進去");
+  ok((await rows(`game_id = 'site'`))[0].game_title === '全站意見（主選單）', '意見：全站意見的名稱');
+  ok((await db.query(`select enabled from public."MF_games" where game_id = 'site'`)).rows[0].enabled === false, "'site' 在 MF_games 是停用的（不是遊戲）");
+  eq(await submit('site', uuid(971), 'a', 0), { ok: false, error: 'unknown_game' }, "'site' 不能送成績");
   // 刪除遊戲時意見跟著刪（on delete cascade）；zz_test 是手寫的測試遊戲
   await fb('zz_test', uuid(906), '測試遊戲的意見');
   await db.exec(`delete from public."MF_games" where game_id = 'zz_test'`);
@@ -308,6 +313,17 @@ for (const g of Object.keys(specs)) {
   await db.exec(sql);
   ok((await rows(`game_id = 'speed' and game_title <> '零秒出手'`)).length === 0, '同步：重新執行 SQL 後，speed 的舊意見全部換成「零秒出手」');
   // (b) 舊資料庫沒有 game_title 這一欄：重新執行 SQL 會補上欄位、並且把所有舊意見補好中文名稱
+  // 升級：線上舊資料表的字數檢查還是 300（create table if not exists 不會更新它）→ 重新執行 SQL 之後換成 600
+  await db.exec(`delete from public."MF_feedback" where char_length(message) > 300`);
+  await db.exec(`alter table public."MF_feedback" drop constraint "MF_feedback_message_check"; alter table public."MF_feedback" add constraint "MF_feedback_message_check" check (char_length(message) between 2 and 300)`);
+  let oldCheck = false;
+  try { await db.query(`insert into public."MF_feedback"(game_id, player_id, message) values ('speed', $1::uuid, $2)`, [uuid(972), '舊'.repeat(450)]); } catch (e) { oldCheck = true; }
+  ok(oldCheck, '升級：模擬舊版資料表（超過 300 字寫不進去）');
+  await db.exec(sql);
+  await db.exec(sql);   // 再跑一次：換檢查條件的那兩行可以重複執行
+  eq(await fb('speed', uuid(972), '新'.repeat(600)), { ok: true, saved: true }, '升級：重新執行 SQL 之後 600 字寫得進去');
+  ok((await rows(`player_id = $1::uuid`, [uuid(972)]))[0].message.length === 600, '升級：600 字完整保存');
+  ok((await db.query(`select count(*)::int as n from pg_constraint where conrelid = 'public."MF_feedback"'::regclass and contype = 'c' and pg_get_constraintdef(oid) like '%char_length(message)%'`)).rows[0].n === 1, '升級：message 的字數檢查只有一個');
   await db.exec(`alter table public."MF_feedback" drop column game_title cascade`);     // cascade：公開檢視表依賴這一欄，一起拿掉（重新執行 SQL 會重建）
   ok((await db.query(`select count(*)::int as n from information_schema.columns where table_name = 'MF_feedback' and column_name = 'game_title'`)).rows[0].n === 0, '升級：模擬舊版資料表（沒有 game_title）');
   await db.exec(sql);

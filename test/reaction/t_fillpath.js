@@ -8,6 +8,7 @@
 //   · 題庫（js/fillpath_bank.js，用 test/reaction/gen_fillpath_bank.cjs 離線搜尋）：每一題都重新驗證（有解、解數、格子數、起點數、連成一塊、結構數字對得上），
 //     而且沒有「有一條路只有 1～2 格」這種亂湊的題目（V1.57.3.1 之前的毛病）；難度一級比一級難，比玩家提供的參考遊戲最難的題目難很多；
 //   · 依難度參數挑題 FP.select：跟暴力挑選一致、參數一改挑的題目就跟著變；
+//   · 路跟路的交錯（V1.57.5 玩家回饋：兩條路用一條直線就能切開）FP.lineErr／FP.interlock：手算的小例子、題庫每一題（看全部的解）都達到下限、遊戲每一關都不是一刀就能切開的題目；
 //   · 兩款遊戲的出題（[第一關, 封頂] 參數、顏色不重複）、限時、評語、接線。
 const fs = require('fs');
 const path = require('path');
@@ -100,6 +101,17 @@ function brute(p) {
   ok(z.vd === 1 && z.x4 === 0 && z.jn === 4, 'analyze：3×3 挖掉一格：空洞 1、沒有十字路口、岔路口 4（上中、左中、中心、右中；' + JSON.stringify(z) + '）');
   ok(FP.analyze(FP.parse('#A#/###/###'), [[1, 4, 7]]).x4 === 1, 'analyze：3×3 全滿中間是十字路口 1'); }
 
+// ═══ 2b+. 交錯程度 FP.lineErr／FP.interlock ═══
+{ ok(FP.lineErr([[0, 0], [0, 1]], [[1, 0], [1, 1]]) === 0, 'lineErr：左右兩欄，一條直線分得開（0 格分錯）');
+  ok(FP.lineErr([[0, 0], [2, 0]], [[1, 0]]) === 1, 'lineErr：一列 a b a，怎麼切都有 1 格分錯');
+  ok(FP.lineErr([[0, 0], [1, 1]], [[1, 0], [0, 1]]) === 1, 'lineErr：2×2 斜對角（XOR）至少分錯 1 格');
+  ok(FP.lineErr([[0, 0], [1, 0], [0, 1]], [[2, 1], [2, 2], [1, 2]]) === 0, 'lineErr：斜著切得開（左上角對右下角）');
+  const two = FP.parse('A###/B###'), r2 = FP.interlock(two, [[0, 1, 2, 3], [4, 5, 6, 7]]);
+  ok(r2.mix === 0 && r2.mixr === 0 && r2.errs.join() === '0,0', 'interlock：上下兩條直路＝完全沒有交錯（玩家抱怨的那種）');
+  const wrap = FP.parse('A###/#B##/####'), r3 = FP.interlock(wrap, [[0, 1, 2, 3, 7, 11, 10, 9, 8, 4], [5, 6]]);
+  ok(r3.mix >= 2 && r3.mixr >= 50, 'interlock：一條路把另一條整個包起來＝直線怎麼切都分不開（' + JSON.stringify(r3) + '）');
+  ok(FP.interlock(FP.parse('A##'), [[0, 1, 2]]).mix === 0, 'interlock：只有一條路回傳 0'); }
+
 // ═══ 2c. 從「畫了一部分」的狀態接著搜尋（FP.solve 的 paths／done／check）、人類視角 FP.human ═══
 { const p = FP.parse('A##/###'), g = FP.graph(p), full = FP.solve(g, p.starts, { limit: 9 });
   const part = FP.solve(g, p.starts, { paths: [[0, 1]], limit: 9 });
@@ -175,14 +187,21 @@ const TIER_TILES = { block: [[10, 13], [14, 17], [18, 21], [22, 25], [26, 30], [
 const TIER_K = { block: [[1, 1], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1]], multi: [[2, 3], [2, 3], [2, 3], [3, 4], [3, 4], [3, 4], [3, 4], [3, 4], [3, 4], [3, 4], [3, 4], [3, 4], [3, 4]] };
 // 結構的最低要求（跟 gen_fillpath_bank.cjs 的 PROF 強度 0「寬鬆」一致）：路口、要猜的路口、深陷阱佔格子數的比例；多色再加路長
 const LOOSE = { multi: { lo: 0.40, hi: 2.0, raw: 0.30, guess: 0.06, deep: 0.04 }, block: { raw: 0.25, guess: 0.06, deep: 0.04 } };
+// 交錯下限（跟 gen_fillpath_bank.cjs 的 MIXN、MIXR 強度 0 一致；依路數 2／3／4）
+const MIX_LOOSE = { 2: [2, 15], 3: [1, 12], 4: [1, 10] };
 function looseOk(kind, m, tiles, k) {
   const L = LOOSE[kind]; let r = m.raw >= Math.round(tiles * L.raw) && m.guess >= Math.floor(tiles * L.guess) && m.deep >= Math.floor(tiles * L.deep);
-  if (kind === 'multi') { const avg = tiles / k; r = r && m.lo >= Math.max(3, Math.round(avg * L.lo)) && m.hi <= Math.round(avg * L.hi); }
+  if (kind === 'multi') { const avg = tiles / k; r = r && m.lo >= Math.max(3, Math.round(avg * L.lo)) && m.hi <= Math.round(avg * L.hi) && m.mix >= MIX_LOOSE[k][0] && m.mixr >= MIX_LOOSE[k][1]; }
   return r;
 }
 // 題庫記的結構數字＝FP.analyze 的一部分＋FP.human（跟 gen_fillpath_bank.cjs 的 KEEP 一致）
-const KEEP = ['lo', 'hi', 't3', 'x4', 'x4d', 'raw', 'dec', 'd3', 'bits', 'guess', 'deep', 'trap', 'hid'];
-function measureAll(p, first) { const a = FP.analyze(p, first), hm = FP.human(p, first), m = {}; KEEP.forEach(key => { m[key] = key in hm ? hm[key] : a[key]; }); return { m, hx: hm.hx }; }
+const KEEP = ['lo', 'hi', 't3', 'x4', 'x4d', 'raw', 'dec', 'd3', 'bits', 'guess', 'deep', 'trap', 'hid', 'mix', 'mixr'];
+// mix／mixr 看全部的解裡最容易切開的那一個（玩家走出任何一組解都算過關）
+function measureAll(p, first, sols) {
+  const a = FP.analyze(p, first), hm = FP.human(p, first), m = {}, all = (sols && sols.length ? sols : [first]).map(s => FP.interlock(p, s));
+  const mx = { mix: Math.min(...all.map(r => r.mix)), mixr: Math.min(...all.map(r => r.mixr)) };
+  KEEP.forEach(key => { m[key] = key in mx ? mx[key] : (key in hm ? hm[key] : a[key]); }); return { m, hx: hm.hx };
+}
 const bank = FP.bank();
 ok(Array.isArray(bank.block) && bank.block.length === FP.TIERS && Array.isArray(bank.multi) && bank.multi.length === FP.TIERS, '題庫：block、multi 各 ' + FP.TIERS + ' 級');
 const connectedOk = (p) => { const g = FP.graph(p), seen = new Set([g.cells[0]]), st = [g.cells[0]]; while (st.length) { const u = st.pop(); g.nb[u].forEach(v => { if (!seen.has(v)) { seen.add(v); st.push(v); } }); } return seen.size === g.cells.length; };
@@ -196,11 +215,12 @@ for (const kind of ['block', 'multi']) for (let t = 0; t < FP.TIERS; t++) {
     ok(p.tiles >= TIER_TILES[kind][t][0] && p.tiles <= TIER_TILES[kind][t][1], tag + '格子數 ' + p.tiles + ' 在 ' + TIER_TILES[kind][t] + ' 之內');
     ok(p.w <= 11 && p.h <= 11 && p.w >= 4 && p.h >= 4 && p.tiles >= 2 * Math.min(p.w, p.h), tag + '棋盤 ' + p.w + '×' + p.h);
     ok(connectedOk(p), tag + '格子連成一塊');
-    const sv = FP.solve(g, p.starts, { limit: 3, budget: 5e6 });
+    const sv = FP.solve(g, p.starts, { limit: 3, budget: 5e6, level: 2, keep: true });
     ok(!sv.aborted && sv.count >= 1 && sv.count === e.c && e.c <= 3, tag + '有解、解數 ' + sv.count + ' ＝ 題庫記的 ' + e.c);
     ok(e.e > 0 && e.t === p.tiles && e.k === p.k, tag + '難度、格子數、起點數的記錄對得上');
     // 結構數字：重新量一遍要跟題庫記的一模一樣
-    const q = sv.first ? measureAll(p, sv.first) : null, m = q && q.m;
+    ok(sv.sols.length === sv.count, tag + 'keep：每一組解都收到了（' + sv.sols.length + '／' + sv.count + '）');
+    const q = sv.first ? measureAll(p, sv.first, sv.sols) : null, m = q && q.m;
     ok(m && JSON.stringify(m) === JSON.stringify(e.m) && q.hx === e.e, tag + '結構數字、試錯量對得上：' + JSON.stringify(e.m) + (m ? ' ／ ' + JSON.stringify(m) + ' ' + q.hx + '／' + e.e : ''));
     if (m) {
       ok(m.lo >= 3, tag + '最短的一條路 ' + m.lo + ' 格（要 ≥ 3：不能有 1～2 格的路）'); allCount++; if (m.lo <= 2) shortPaths++;
@@ -208,10 +228,11 @@ for (const kind of ['block', 'multi']) for (let t = 0; t < FP.TIERS; t++) {
     }
     tiles.push(p.tiles); es.push(e.e);
     // 8 種翻轉旋轉都一樣有解、結構數字不變
-    if (i < 2) for (let tt = 1; tt < 8; tt++) { const q2 = FP.transform(p, tt), r = FP.solve(FP.graph(q2), q2.starts, { limit: 3, budget: 5e6 }); ok(r.count === sv.count, tag + '翻轉旋轉 ' + tt + ' 解數不變'); if (sv.count === 1) { const mm = measureAll(q2, r.first).m; ['lo', 'hi', 't3', 'x4', 'x4d', 'raw', 'guess', 'hid'].forEach(key => ok(mm[key] === e.m[key], tag + '翻轉旋轉 ' + tt + ' ' + key + ' 不變（' + mm[key] + '／' + e.m[key] + '）')); } }
+    if (i < 2) for (let tt = 1; tt < 8; tt++) { const q2 = FP.transform(p, tt), r = FP.solve(FP.graph(q2), q2.starts, { limit: 3, budget: 5e6, level: 2, keep: true }); ok(r.count === sv.count, tag + '翻轉旋轉 ' + tt + ' 解數不變'); if (sv.count === 1) { const mm = measureAll(q2, r.first, r.sols).m; ['lo', 'hi', 't3', 'x4', 'x4d', 'raw', 'guess', 'hid', 'mix', 'mixr'].forEach(key => ok(mm[key] === e.m[key], tag + '翻轉旋轉 ' + tt + ' ' + key + ' 不變（' + mm[key] + '／' + e.m[key] + '）')); } }
   });
-  // 一般的題目只有 1 種解（跟參考遊戲一樣），最多 3 種
-  ok(list.filter(e => e.c === 1).length >= list.length * 0.5, kind + ' 第 ' + t + ' 級至少一半的題目剛好只有 1 種解（' + list.filter(e => e.c === 1).length + '／' + list.length + '）');
+  // 一般的題目只有 1 種解（跟參考遊戲一樣），最多 3 種。
+  // 例外：多色第 9～12 級（48 格以上的大棋盤）要同時「路互相交錯」又「只有 1 種解」非常難搜到（V1.57.5），這幾級允許大多是 2～3 種解（上面已經檢查每一題解數 ≤ 3）
+  if (!(kind === 'multi' && t >= 9)) ok(list.filter(e => e.c === 1).length >= list.length * 0.5, kind + ' 第 ' + t + ' 級至少一半的題目剛好只有 1 種解（' + list.filter(e => e.c === 1).length + '／' + list.length + '）');
   const set = new Set(list.map(e => { const p = FP.parse(e.s); let best = null; for (let tt = 0; tt < 8; tt++) { const s = FP.serialize(FP.transform(p, tt)); if (best === null || s < best) best = s; } return best; }));
   ok(set.size === list.length, kind + ' 第 ' + t + ' 級沒有重複的題目（翻轉旋轉之後一樣也算重複）');
   stat[kind].push({ tiles: tiles.reduce((a, b) => a + b, 0) / tiles.length, e: es.reduce((a, b) => a + Math.log(1 + b), 0) / es.length });
@@ -260,7 +281,7 @@ ok(FP.pick('block', 99, rnd) === null && FP.pick('nope', 0, rnd) === null, '沒�
 ok(FP.tierFor(1, 30) === 0 && FP.tierFor(30, 30) === FP.TIERS - 1 && FP.tierFor(99, 30) === FP.TIERS - 1 && FP.tierFor(0, 30) === 0, 'tierFor：第 1 關 0 級、第 30 關最後一級、之後維持');
 for (let l = 2; l <= 60; l++) ok(FP.tierFor(l, 30) >= FP.tierFor(l - 1, 30), 'tierFor 單調');
 ok(FP.tierFor(15, 30) >= 5 && FP.tierFor(15, 30) <= 7, '第 15 關大約在中間（' + FP.tierFor(15, 30) + ' 級）');
-// FP.select：跟「暴力挑選」一致——回傳的題目，評分不會比最佳的差 0.6 以上；條件一改，挑到的題目就跟著變
+// FP.select：跟「暴力挑選」一致——回傳的題目，評分不會比最佳的差 1.0 以上；條件一改，挑到的題目就跟著變
 { const flat = kind => { const a = []; bank[kind].forEach(l => l.forEach(e => a.push(e))); return a; };
   const scoreOf = (e, want) => FP.violation(e, want) * 8 + Math.abs(e.t - want.tiles) / 4 + Math.abs(Math.log(1 + e.e) - Math.log(1 + want.e)) / 0.5 + (want.k ? Math.abs(e.k - want.k) * 1.2 : 0);
   for (const kind of ['block', 'multi']) {
@@ -269,7 +290,7 @@ ok(FP.tierFor(15, 30) >= 5 && FP.tierFor(15, 30) <= 7, '第 15 關大約在中�
       const want = { tiles: 10 + Math.floor(rnd() * 44), e: Math.exp(2.4 + rnd() * 6.6), k: kind === 'block' ? 1 : 2 + Math.floor(rnd() * 3), sol: 1 + Math.floor(rnd() * 3), min: { raw: Math.floor(rnd() * 25), guess: Math.floor(rnd() * 8), deep: Math.floor(rnd() * 8), t3: Math.floor(rnd() * 12) }, max: { trap: 5 + Math.floor(rnd() * 40) } };
       if (kind === 'multi') { want.min.lo = 3 + Math.floor(rnd() * 8); want.max.hi = 8 + Math.floor(rnd() * 20); want.min.hid = Math.floor(rnd() * 2); want.max.hid = 1 + Math.floor(rnd() * 2); }
       const best = Math.min.apply(null, all.map(e => scoreOf(e, want))), q = FP.select(kind, want, rnd, -1);
-      ok(q && q.score <= best + 0.6 + 1e-9 && Math.abs(q.score - scoreOf(all[0] && { s: q.s, c: q.c, e: q.e, t: q.p.tiles, k: q.p.k, m: q.m }, want)) < 1e-9, kind + ' 挑題：評分 ' + (q && q.score.toFixed(2)) + ' 與最佳 ' + best.toFixed(2) + ' 相差在 0.6 之內，而且評分算得對');
+      ok(q && q.score <= best + 1.0 + 1e-9 && Math.abs(q.score - scoreOf(all[0] && { s: q.s, c: q.c, e: q.e, t: q.p.tiles, k: q.p.k, m: q.m }, want)) < 1e-9, kind + ' 挑題：評分 ' + (q && q.score.toFixed(2)) + ' 與最佳 ' + best.toFixed(2) + ' 相差在 1.0 之內，而且評分算得對');
       tried++; if (q && q.viol === 0) satisfied++;
       if (q && q.viol === 0) { Object.keys(want.min).forEach(key => ok(q.m[key] >= want.min[key] - 1e-9, kind + ' 挑到的題目 ' + key + ' ＝ ' + q.m[key] + ' 要 ≥ ' + want.min[key])); Object.keys(want.max).forEach(key => ok(q.m[key] <= want.max[key] + 1e-9, kind + ' 挑到的題目 ' + key + ' ＝ ' + q.m[key] + ' 要 ≤ ' + want.max[key])); ok(q.c <= want.sol, kind + ' 解數 ' + q.c + ' ≤ ' + want.sol); }
     }
@@ -290,7 +311,7 @@ ok(FP.tierFor(15, 30) >= 5 && FP.tierFor(15, 30) <= 7, '第 15 關大約在中�
   { let prev = -1, rep = 0; for (let i = 0; i < 80; i++) { const q = FP.select('multi', { tiles: 30, e: 300, k: 3, min: {}, max: {} }, rnd, prev); if (q.idx === prev) rep++; prev = q.idx; } ok(rep === 0, 'select：條件寬鬆時不會連續兩關出同一題（重複 ' + rep + ' 次）'); } }
 
 // ═══ 6. 兩款遊戲 ═══
-const PARAM_NAMES = { block: ['TILES', 'HUMAN_EFFORT', 'SOL_MAX', 'HIDDEN_END_MIN', 'FORK_MIN', 'GUESS_MIN', 'FORK3_MIN', 'DEEP_TRAP_MIN', 'TRAP_MAX', 'T_CELL_MIN', 'CROSSROAD_MIN'], multi: ['TILES', 'COLORS', 'HUMAN_EFFORT', 'SOL_MAX', 'HIDDEN_END_MIN', 'HIDDEN_END_MAX', 'FORK_MIN', 'GUESS_MIN', 'FORK3_MIN', 'DEEP_TRAP_MIN', 'TRAP_MAX', 'T_CELL_MIN', 'CROSSROAD_MIN', 'PATH_MIN', 'PATH_MAX'] };
+const PARAM_NAMES = { block: ['TILES', 'HUMAN_EFFORT', 'SOL_MAX', 'HIDDEN_END_MIN', 'FORK_MIN', 'GUESS_MIN', 'FORK3_MIN', 'DEEP_TRAP_MIN', 'TRAP_MAX', 'T_CELL_MIN', 'CROSSROAD_MIN'], multi: ['TILES', 'COLORS', 'HUMAN_EFFORT', 'SOL_MAX', 'HIDDEN_END_MIN', 'HIDDEN_END_MAX', 'FORK_MIN', 'GUESS_MIN', 'FORK3_MIN', 'DEEP_TRAP_MIN', 'TRAP_MAX', 'T_CELL_MIN', 'CROSSROAD_MIN', 'PATH_MIN', 'PATH_MAX', 'MIX_MIN'] };
 for (const [G, T, kind] of [[GB, TB, 'block'], [GM, TM, 'multi']]) {
   const tag = G.id + ' ';
   ok(G.id === (kind === 'block' ? 'blockfill' : 'multifill') && G.name.length <= 5 && G.score.better === 'max' && G.score.min === 1 && G.score.max === 90 && G.score.format === '{v} 關', tag + '登記資料：id、名稱（' + G.name + '）、成績規格');
@@ -307,7 +328,14 @@ for (const [G, T, kind] of [[GB, TB, 'block'], [GM, TM, 'multi']]) {
     ok(w1.min.deep === P.DEEP_TRAP_MIN[0] && wc.min.deep === P.DEEP_TRAP_MIN[1] && w1.max.trap === P.TRAP_MAX[0] && wc.max.trap === P.TRAP_MAX[1] && w1.min.hid === P.HIDDEN_END_MIN[0] && wc.min.hid === P.HIDDEN_END_MIN[1], tag + '深陷阱、最深陷阱、藏起來的終點：兩端對得上');
     ok(w1.min.t3 === P.T_CELL_MIN[0] && wc.min.t3 === P.T_CELL_MIN[1] && w1.min.x4d === P.CROSSROAD_MIN[0] && wc.min.x4d === P.CROSSROAD_MIN[1], tag + 'T 字格、十字格：兩端對得上');
     if (kind === 'multi') ok(w1.min.lo === P.PATH_MIN[0] && wc.min.lo === P.PATH_MIN[1] && w1.max.hi === P.PATH_MAX[0] && wc.max.hi === P.PATH_MAX[1] && w1.k === P.COLORS[0] && wc.k === P.COLORS[1] && w1.max.hid === P.HIDDEN_END_MAX[0] && wc.max.hid === P.HIDDEN_END_MAX[1], tag + '最短路、最長路、顏色數、藏終點上限：兩端對得上');
-    if (kind === 'multi') ok(P.PATH_MIN[0] >= 3 && P.PATH_MIN[1] >= P.PATH_MIN[0], tag + '最短路至少 3 格（不會出 1～2 格的路）'); }
+    if (kind === 'multi') ok(P.PATH_MIN[0] >= 3 && P.PATH_MIN[1] >= P.PATH_MIN[0], tag + '最短路至少 3 格（不會出 1～2 格的路）');
+    if (kind === 'multi') ok(w1.min.mix === P.MIX_MIN[0] && wc.min.mix === P.MIX_MIN[1] && P.MIX_MIN[0] >= 1 && P.MIX_MIN[1] >= 1, tag + '交錯程度：兩端對得上、至少 1（' + P.MIX_MIN + '）'); }
+  if (kind === 'multi') {   /* 玩家回饋：兩條路沒有交錯、一條直線就切開。每一關（多抽幾次）都不能是那種題目；第 1～9 關（兩個起點、剛換三個起點）要達到 MIX_MIN */
+    let worst = 99, worstEarly = 99, early = 0, hit = 0, two = 99;
+    for (let rep = 0; rep < 25; rep++) for (let l = 1; l <= 45; l++) { const q = T.makeLevel(l, rnd); worst = Math.min(worst, q.pk.m.mix); if (l <= 9) { early++; worstEarly = Math.min(worstEarly, q.pk.m.mix); if (q.pk.m.mix >= q.want.min.mix) hit++; } if (q.pk.p.k === 2) two = Math.min(two, q.pk.m.mix); }
+    ok(worst >= 1, tag + '每一關的每一條路都沒辦法用一條直線乾淨切開（最小分錯 ' + worst + ' 格）');
+    ok(two >= 2, tag + '兩個起點的題目：至少分錯 2 格（' + two + '）');
+    ok(worstEarly >= 1 && hit === early, tag + '第 1～9 關全部達到交錯要求（' + hit + '／' + early + '，最小 ' + worstEarly + '）'); }
   let lowViol = 0, n = 0;
   for (let l = 1; l <= 45; l++) {
     const q = T.makeLevel(l, rnd), p = q.pk.p;

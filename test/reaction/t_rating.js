@@ -367,6 +367,11 @@ const DAY = 24 * 3600 * 1000;
     ok(seg.indexOf('var sendBtn = ctl.buttons[1]') > 0, '送出按鈕是第二顆');
     const j = css.indexOf('.dlg--feedback .dlg__btns .btn');
     ok(j > 0 && css.slice(j, j + 120).indexOf('calc(var(--btn-h) * 0.7)') > 0, '意見彈窗的按鈕高度 70%');
+    // 意見字數上限：輸入框、送出前的清理、資料庫函式、資料表檢查四個地方要一致（以前輸入框 600、其他 300，超過的字被默默切掉）
+    const lbSrc = rd('../../js/leaderboard.js'), sqlSrc = rd('../../supabase/MF_leaderboard.sql'), fakeSrc = rd('../../test/leaderboard/fake_backend.js');
+    const num = (re, src) => { const m = re.exec(src); return m ? +m[1] : -1; };
+    const limits = [num(/var FB_MAX = (\d+);/, dlg), num(/var FB_MAX = (\d+);/, lbSrc), num(/c_max_len\s+constant int := (\d+);/, sqlSrc), num(/message\s+text\s+not null check \(char_length\(message\) between 2 and (\d+)\)/, sqlSrc), num(/add constraint "MF_feedback_message_check" check \(char_length\(message\) between 2 and (\d+)\)/, sqlSrc), num(/message: msg\.slice\(0, (\d+)\)/, fakeSrc)];
+    ok(limits.every((v) => v === 600), '意見字數上限六個地方都是 600：' + limits.join('、'));
   }
   say(bad ? 'FAILED ' + bad + ' / ' + total : 'ALL PASS (' + total + ' checks)');
   process.exitCode = bad ? 1 : 0;

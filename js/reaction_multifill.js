@@ -4,6 +4,7 @@
    跟「一筆填滿」不同的是**有好幾種顏色的起點**（2～4 個），每種顏色一個；終點都不告訴你。手指從每個起點各拖出一條路，
    不同顏色不能重疊；**每條路各自在哪裡結束要自己判斷，全部的方格都要被蓋滿**才過關。
    ───────────────────────────────────────────────────────────────────
+   · 路要互相交錯（V1.57.5）：題庫裡沒有「一條直線就能把某條路跟其他路切開」的題目（以前約四分之三的題目都能切開），見參數 MIX_MIN。
    · 難在「怎麼分」：這些方格要分成好幾條路，每條路從自己的起點出發，怎麼切、各走多長、在哪裡結束，沒有任何提示；
      某一條路多走一格，別條路就少一格，錯了要到很後面才會發現有格子沒人蓋得到。好的題目只有 1～3 種分法。
    · 出題（離線搜尋，js/fillpath_bank.js）：題庫每一題都「站在人類的立場」走過一遍（路上有幾個 T 字／十字路口要選、錯的方向要走多遠才發現、終點藏了幾個…，見 js/fillpath_core.js 的 FP.human），
@@ -53,8 +54,11 @@
     /* —— 每條路的長短（單位：格，含起點）—— */
     var PATH_MIN = [4, 12];                      /* 最短的一條路至少幾格（題庫裡本來就沒有短於 3 格的路；參考遊戲的題目最短的路都有 4 格以上） */
     var PATH_MAX = [16, 24];                    /* 最長的一條路最多幾格 */
+    /* —— 路跟路的交錯（V1.57.5 玩家回饋：兩條路用一條直線就能切開，各走各的就過關）—— */
+    var MIX_MIN = [2, 2];                       /* 交錯程度至少幾格：拿一條直線去分開「某一條路」跟「其他的格子」，怎麼擺最少都還有幾格分到錯邊（取各條路裡最小的；0＝一刀就切開。越大纏得越深。題庫：兩色最多 5、三色最多 13、四色大多 1～2） */
     /* ═══ 題庫相關參數到這裡為止（以下的參數調整後不用重新產生題庫）═══ */
     var COLOR_POOL = [0, 1, 2, 3, 4, 6, 7];     /* 路的顏色（編號對應接電線的 --wlk-編號：紅、藍、綠、黃、紫、橘、粉紅；水藍、棕、灰太像別的顏色，不用）；每關從裡面挑不重複的幾種 */
+    var SOL_PENALTY = 0.1;                      /* 挑題時，解比 SOL_MAX 每多一種扣多少分。最大的幾種棋盤（67 格以上）幾乎都有 2～3 種解（要交錯又唯一解很難搜到），扣太重（原本 0.5）會改挑小很多的棋盤 */
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
@@ -67,8 +71,8 @@
     function wantFor(level) {
         var r = function (a) { return ramp(level, a); }, n = function (a) { return Math.round(ramp(level, a)); };
         return {
-            tiles: n(TILES), k: n(COLORS), e: Math.exp(ramp(level, [Math.log(HUMAN_EFFORT[0]), Math.log(HUMAN_EFFORT[1])])), sol: n(SOL_MAX),
-            min: { hid: n(HIDDEN_END_MIN), raw: n(FORK_MIN), guess: n(GUESS_MIN), d3: n(FORK3_MIN), deep: n(DEEP_TRAP_MIN), t3: n(T_CELL_MIN), x4d: n(CROSSROAD_MIN), lo: n(PATH_MIN) },
+            tiles: n(TILES), k: n(COLORS), e: Math.exp(ramp(level, [Math.log(HUMAN_EFFORT[0]), Math.log(HUMAN_EFFORT[1])])), sol: n(SOL_MAX), solW: SOL_PENALTY,
+            min: { hid: n(HIDDEN_END_MIN), raw: n(FORK_MIN), guess: n(GUESS_MIN), d3: n(FORK3_MIN), deep: n(DEEP_TRAP_MIN), t3: n(T_CELL_MIN), x4d: n(CROSSROAD_MIN), lo: n(PATH_MIN), mix: n(MIX_MIN) },
             max: { hid: n(HIDDEN_END_MAX), trap: n(TRAP_MAX), hi: n(PATH_MAX) }
         };
     }
@@ -120,7 +124,7 @@
         test: {
             wantFor: wantFor, timeMs: timeMs, makeLevel: makeLevel, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, TIME_S: TIME_S, COLOR_POOL: COLOR_POOL, MAX_LEVEL: MAX_LEVEL,
-            PARAMS: { TILES: TILES, COLORS: COLORS, HUMAN_EFFORT: HUMAN_EFFORT, SOL_MAX: SOL_MAX, HIDDEN_END_MIN: HIDDEN_END_MIN, HIDDEN_END_MAX: HIDDEN_END_MAX, FORK_MIN: FORK_MIN, GUESS_MIN: GUESS_MIN, FORK3_MIN: FORK3_MIN, DEEP_TRAP_MIN: DEEP_TRAP_MIN, TRAP_MAX: TRAP_MAX, T_CELL_MIN: T_CELL_MIN, CROSSROAD_MIN: CROSSROAD_MIN, PATH_MIN: PATH_MIN, PATH_MAX: PATH_MAX }
+            PARAMS: { TILES: TILES, COLORS: COLORS, HUMAN_EFFORT: HUMAN_EFFORT, SOL_MAX: SOL_MAX, HIDDEN_END_MIN: HIDDEN_END_MIN, HIDDEN_END_MAX: HIDDEN_END_MAX, FORK_MIN: FORK_MIN, GUESS_MIN: GUESS_MIN, FORK3_MIN: FORK3_MIN, DEEP_TRAP_MIN: DEEP_TRAP_MIN, TRAP_MAX: TRAP_MAX, T_CELL_MIN: T_CELL_MIN, CROSSROAD_MIN: CROSSROAD_MIN, PATH_MIN: PATH_MIN, PATH_MAX: PATH_MAX, MIX_MIN: MIX_MIN }
         }
     };
     /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */

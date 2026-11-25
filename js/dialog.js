@@ -21,7 +21,8 @@
                             o.cls／o.cardCls／o.attrs   額外的 class／資料屬性
                             o.onClose   彈窗關掉（不管怎麼關）之後要做的事
      Dlg.rule(game, o)    玩法說明彈窗（reaction.js 進場與右上角「?」用）；內文一句一行、**重點**用粗體黑字（Dlg.richText）
-     Dlg.feedback(game)   「我有話要說」意見彈窗（結算彈窗最下方的按鈕會打開它）
+     Dlg.feedback(game, o) 「我有話要說」意見彈窗（結算彈窗最下方的按鈕、主選單的漢堡選單會打開它；
+                           o.sub／o.placeholder 可以換副標題與輸入框的提示字）
      Dlg.toast(text)      畫面下方短暫的小提示
    彈窗都蓋在標題列「下面」，所以上方的「返回」「喇叭」「?」隨時都點得到。
    ═══════════════════════════════════════════════════════════════════ */
@@ -226,15 +227,16 @@
        玩家寫下意見 → Leaderboard.sendFeedback 送到資料庫的 MF_feedback（每一列都記著是哪一款遊戲）。
        連不上網路時意見先存在這支手機，下次開頁面時補送（見 js/leaderboard.js）。 */
     var FB_MAX = 600;
-    Dlg.feedback = function (game) {
+    Dlg.feedback = function (game, o) {
+        o = o || {};
         var LB = global.Leaderboard;
         var ta = h('textarea', {
             'class': 'dlg-input dlg-input--area',
-            attrs: { maxlength: String(FB_MAX), rows: '12', placeholder: '想說什麼都可以：哪裡不好玩、哪裡看不懂、想要什麼新遊戲…', 'aria-label': '你的意見' }
+            attrs: { maxlength: String(FB_MAX), rows: '12', placeholder: o.placeholder || '想說什麼都可以：哪裡不好玩、哪裡看不懂、想要什麼新遊戲…', 'aria-label': '你的意見' }
         });
         var count = h('div', { 'class': 'dlg__count', text: '0 / ' + FB_MAX });
         var ctl = Dlg.open({
-            cls: 'dlg--feedback', title: '我有話要說', sub: game && game.name ? game.name : '',
+            cls: 'dlg--feedback', title: '我有話要說', sub: o.sub || (game && game.name ? game.name : ''),
             children: [ta, count],
             btnRow: true,          /* V1.27：「取消」「送出」左右並排，送出在右邊；按鈕高度 70%（見 css/dialog.css 的 .dlg--feedback） */
             buttons: [

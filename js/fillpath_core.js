@@ -90,7 +90,7 @@
         opts = opts || {};
         var N = g.N, nb = g.nb, k = starts.length, cover = new Int8Array(N), head = new Int32Array(k), done = new Uint8Array(k), c, i;
         var limit = opts.limit || 1, budget = opts.budget || 1000000, level = opts.level === undefined ? 2 : opts.level, order = opts.order || 'fixed', rand = opts.rand || Math.random;
-        var count = 0, nodes = 0, aborted = false, first = null, left = g.cells.length - k, cells = g.cells, paths = [];
+        var count = 0, nodes = 0, aborted = false, first = null, sols = [], left = g.cells.length - k, cells = g.cells, paths = [];
         var tag = new Int32Array(N), stamp = 0, stack = new Int32Array(N);
         for (i = 0; i < N; i++) cover[i] = -1;
         for (c = 0; c < k; c++) {
@@ -138,7 +138,7 @@
             if (aborted) return;
             if (++nodes > budget) { aborted = true; return; }
             if (dep > maxDep) maxDep = dep;
-            if (left === 0) { count++; if (!first) first = paths.map(function (p) { return p.slice(); }); return; }
+            if (left === 0) { count++; if (!first || opts.keep) { var sn = paths.map(function (p) { return p.slice(); }); if (!first) first = sn; if (opts.keep) sols.push(sn); } return; }   /* opts.keep：把找到的每一組解都留下來（量交錯程度要看全部的解） */
             if (!feasible()) return;
             var bc = -1, bm = null, col, fm;
             for (col = 0; col < k; col++) {
@@ -158,7 +158,7 @@
         }
         if (opts.check) return { ok: left === 0 || feasible() };   /* 只檢查「現在這個狀態看得出錯嗎」（不搜尋） */
         rec();
-        return { count: count, nodes: nodes, aborted: aborted, first: first, depth: maxDep };
+        return { count: count, nodes: nodes, aborted: aborted, first: first, sols: sols, depth: maxDep };
     };
 
     /* ═══ 二之一、量題目的「結構」（V1.57.3.1：難度參數要量得出來才能調）═══
@@ -215,6 +215,40 @@
         var sd = 0;
         if (k >= 2) { sd = 999; for (i = 0; i < k; i++) for (j = i + 1; j < k; j++) { var s1 = p.starts[i], s2 = p.starts[j], dd = Math.abs((s1 % w) - (s2 % w)) + Math.abs(((s1 / w) | 0) - ((s2 / w) | 0)); if (dd < sd) sd = dd; } }
         return { lo: lo, hi: hi, bal: r2(lo / hi), tr: den ? r2(turns / den) : 0, st: st, jn: jn, t3: t3, x4: x4, x4d: x4d, co: r2(cor / g.cells.length), ch: steps ? r2(branch / steps) : 0, cr: cr, sd: sd, vd: p.w * p.h - p.tiles };
+    };
+
+    /* ═══ 二之一·五、量「交錯程度」（玩家回饋：兩條路完全沒有交錯，一條直線就能把盤面切成兩半，各自往不同方向走就過關）═══
+       對每一條路（顏色），試著畫一條直線把「這條路的格子」跟「其他所有格子」分開：每個角度（每 3 度一個）、每個位置都試，看最少有幾格分到錯邊（lineErr）。
+       0 格＝一條直線就能乾淨地把它切開（太簡單）；分錯的格子越多，這條路跟別的路纏得越深。
+       interlock(p, paths) 回傳 { mix（各條路裡「最少分錯幾格」的最小值）, mixr（同上，除以那條路與其他部分中比較小的一邊的格子數，百分比整數）, errs（每條路各自分錯幾格）}。
+       路只有一條（一筆填滿）回傳 mix＝0。 */
+    var LINE_STEP_DEG = 3;
+    function lineErr(a, b) {                             /* a、b：兩群格子的中心座標 [[x, y]…]；回傳用一條直線分開時，最少有幾格分到錯的一邊 */
+        var best = Math.min(a.length, b.length), i, d;
+        for (d = 0; d < 180 && best > 0; d += LINE_STEP_DEG) {
+            var th = d * Math.PI / 180, nx = Math.cos(th), ny = Math.sin(th), all = [];
+            for (i = 0; i < a.length; i++) all.push([a[i][0] * nx + a[i][1] * ny, 0]);
+            for (i = 0; i < b.length; i++) all.push([b[i][0] * nx + b[i][1] * ny, 1]);
+            all.sort(function (u, v) { return u[0] - v[0]; });
+            var l0 = 0, l1 = 0;                          /* 切線左邊目前有幾個 a、幾個 b */
+            for (i = 0; i <= all.length; i++) {
+                if (i === 0 || i === all.length || all[i][0] - all[i - 1][0] > 1e-9) best = Math.min(best, l1 + (a.length - l0), l0 + (b.length - l1));   /* 只能切在兩個不同投影值之間 */
+                if (i < all.length) { if (all[i][1] === 0) l0++; else l1++; }
+            }
+        }
+        return best;
+    }
+    FP.lineErr = lineErr;
+    FP.interlock = function (p, paths) {
+        if (!paths || paths.length < 2) return { mix: 0, mixr: 0, errs: [] };
+        var xy = paths.map(function (path) { return path.map(function (i) { return [i % p.w, Math.floor(i / p.w)]; }); }), errs = [], mix = Infinity, mixr = Infinity;
+        for (var c = 0; c < paths.length; c++) {
+            var rest = [];
+            for (var o = 0; o < paths.length; o++) if (o !== c) rest = rest.concat(xy[o]);
+            var e = lineErr(xy[c], rest), small = Math.max(1, Math.min(xy[c].length, rest.length));
+            errs.push(e); mix = Math.min(mix, e); mixr = Math.min(mixr, Math.floor(100 * e / small));
+        }
+        return { mix: mix, mixr: mixr, errs: errs };
     };
 
     /* ═══ 二之二、站在人類的立場走一遍（V1.57.3.2：玩家指出「難在 T 字路口」）═══
@@ -380,15 +414,15 @@
          want = { tiles 想要的格子數, e 想要的人類試錯量（越大越難）, k 想要的路數,
                   min: { 結構數字的名字: 至少要這麼多 }（例如 raw 路口、guess 要猜的路口、deep 深陷阱、hid 藏起來的終點、lo 最短路、t3 T 字格）,
                   max: { 結構數字的名字: 最多這麼多 }（例如 hi 最長路、trap 最深陷阱、hid 藏起來的終點）,
-                  sol 解數上限 }
+                  sol 解數上限, solW 解每多一種扣多少（不給＝0.5） }
        評分（越小越好）：違反「至少／最多」的程度 × 8（相對差距：差多少 ÷ 門檻；「最多 0 個」差 1 個算 1）＋ 離想要的格子數／難度／路數多遠。
-       題庫是有限的：條件太嚴、題庫裡沒有題目全部符合時，就挑「違反最少」的；條件寬鬆時，離想要的樣子最近的幾題裡隨機挑一題，並盡量不連續出同一題。
+       題庫是有限的：條件太嚴、題庫裡沒有題目全部符合時，就挑「違反最少」的；條件寬鬆時，離想要的樣子最近的幾題（評分跟最佳相差 1.0 以內，最多 6 題）裡隨機挑一題，並盡量不連續出同一題。
        回傳 { p 題目物件（隨機翻轉旋轉過）, s 原字串, c 解數, e 難度, m 結構, t 用了哪一種翻轉旋轉, tier 題庫的級數, idx 第幾題, score 評分, viol 違反程度 }；題庫是空的回傳 null。 */
     FP.violation = function (e, want) {
         var v = 0, key, t, x;
         for (key in (want.min || {})) { t = want.min[key]; x = e.m[key]; if (t > 0 && x < t) v += (t - x) / t; }
         for (key in (want.max || {})) { t = want.max[key]; x = e.m[key]; if (t >= 0 && x > t) v += (x - t) / Math.max(t, 1); }   /* 「最多 0 個」也算數（例如終點一個都不藏） */
-        if (want.sol && e.c > want.sol) v += (e.c - want.sol) * 0.5;
+        if (want.sol && e.c > want.sol) v += (e.c - want.sol) * (want.solW != null ? want.solW : 0.5);   /* solW（選填）：解每多一種扣多少 */
         return v;
     };
     FP.select = function (kind, want, rand, avoid) {
@@ -404,7 +438,7 @@
         });
         if (!cand.length) return null;
         cand.sort(function (a, b) { return a.score - b.score; });
-        var best = cand[0].score, pool = cand.filter(function (c, i) { return i < 6 && c.score <= best + 0.6; });
+        var best = cand[0].score, pool = cand.filter(function (c, i) { return i < 6 && c.score <= best + 1.0; });   /* V1.57.5：0.6 放寬到 1.0，中段關卡才不會老是那兩題 */
         if (pool.length > 1 && avoid != null) { var other = pool.filter(function (c) { return c.idx !== avoid; }); if (other.length) pool = other; }   /* 盡量不要連續兩關出同一題 */
         var c = pool[Math.floor(rand() * pool.length)], p0 = FP.parse(c.e.s), t = Math.floor(rand() * 8);
         if (p0.w !== p0.h && (t % 2 === 1) === (p0.w < p0.h)) t ^= 1;   /* 不是正方形的棋盤一律轉成「直的」（手機是直的，格子才大；t 是奇數＝轉 90／270 度、寬高對調） */

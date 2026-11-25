@@ -38,7 +38,7 @@
     touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢，改由程式處理拖曳 */
 }
 
-/* 介面最下方那一排：「浮窗」勾選框、「快速拖曳」勾選框、「確定」按鈕（高度由 js 設定） */
+/* 介面最下方那一排：「浮窗」勾選框（高度由 js 設定） */
 .numgrid-bar {
     position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
     left: 0;                                            /* 離左邊 0 */
@@ -46,13 +46,13 @@
     bottom: 0;                                          /* 離下邊 0 */
     display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
     align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中） */
-    justify-content: space-between;                     /* 頭尾貼邊，剩下的空間平均分給中間 */
+    justify-content: center;                            /* 子元素在主要方向置中（橫排時是左右置中） */
     gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
     padding: 0 var(--sp-2);                             /* 內縮（padding，內容跟邊框的距離）：上下 0、左右 --sp-2 */
     box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
 }
 
-/* 勾選框＋文字（「浮窗」「快速拖曳」） */
+/* 勾選框＋文字（「浮窗」） */
 .numgrid-check {
     display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
     align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中） */
@@ -70,20 +70,6 @@
     height: 26px;                                       /* 高度：26px */
     margin: 0;                                          /* 外距：0 */
     accent-color: var(--c-blue);                        /* 勾選框打勾時的顏色：主題變數 --c-blue */
-}
-
-/* 「確定」按鈕：共用的 .btn 是整列寬，這裡改成自己的大小 */
-.numgrid-ok {
-    width: auto;                                        /* 寬度：依內容 */
-    min-width: 150px;                                   /* 最小寬度：150px（寫上「＋45」的時候不會跳動） */
-    height: 40px;                                       /* 高度：40px */
-    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上下 0、左右 --sp-3 */
-    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
-}
-
-/* 挑選的格子還湊不成一串：「確定」變淡（還是按得下去，會告訴玩家哪裡不對） */
-.numgrid-ok--off {
-    opacity: 0.55;                                      /* 透明度 0.55（1＝完全不透明、0＝全透明） */
 }
 
 /* 浮窗九宮格（canvas，大小與位置由 js 設定；不接收手指事件，才不會擋到拖曳） */

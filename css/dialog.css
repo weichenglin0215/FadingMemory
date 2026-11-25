@@ -186,6 +186,52 @@
     height: calc(var(--btn-h) * 0.7);                   /* 高度：calc(主題變數 --btn-h * 0.7) */
 }
 
+/* 「我有話要說」：整個畫面（四邊留一點點、保留圓角）。打字時舞台維持原來的大小（js/stage.js），字不會變小。 */
+.dlg.dlg--feedback {
+    top: 0;                                             /* 離上邊 0（連標題列那一條也蓋住） */
+    padding: 8px;                                       /* 內縮（padding，內容跟邊框的距離）：四邊都是 8px */
+}
+
+/* 意見卡片撐滿整個畫面 */
+.dlg--feedback .dlg__card {
+    width: 100%;                                        /* 寬度：100% */
+    max-width: none;                                    /* 最大寬度：不限制 */
+    height: 100%;                                       /* 高度：100% */
+}
+
+/* 輸入框把剩下的高度全部佔滿；字加大一級 */
+.dlg--feedback .dlg__card>.dlg-input--area {
+    flex: 1 1 0;                                        /* 彈性縮放：有多少空間就佔多少 */
+    height: auto;                                       /* 高度：自動 */
+    min-height: 120px;                                  /* 最小高度：120px */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+}
+
+/* 螢幕鍵盤開著（js/stage.js 加上 stage-typing，--kb-visible＝鍵盤上方看得到的高度）：
+   卡片改成只佔鍵盤上方那一塊，輸入框、字數、「取消」「送出」都看得到 */
+.stage-typing .dlg.dlg--feedback {
+    align-items: flex-start;                            /* 子元素靠交叉方向的起點（橫排時靠上） */
+}
+
+/* 鍵盤開著時的意見卡片 */
+.stage-typing .dlg--feedback .dlg__card {
+    height: auto;                                       /* 高度：跟著內容 */
+    gap: 8px;                                           /* 子元素之間的空隙：8px */
+    padding-top: 10px;                                  /* 上內縮：10px */
+    padding-bottom: 10px;                               /* 下內縮：10px */
+}
+
+/* 鍵盤開著時不顯示副標題（把高度留給輸入框） */
+.stage-typing .dlg--feedback .dlg__sub {
+    display: none;                                      /* 不顯示 */
+}
+
+/* 鍵盤開著時輸入框的高度：看得到的高度扣掉標題、字數、按鈕與留白 */
+.stage-typing .dlg--feedback .dlg__card>.dlg-input--area {
+    flex: 0 0 auto;                                     /* 彈性縮放：固定大小 */
+    height: calc(var(--kb-visible) - 220px);            /* 高度：calc(看得到的高度 - 220px) */
+}
+
 /* 結算彈窗：內容置中（大數字、評語、說明行）；卡片底部的「我有話要說」小一點、放在所有按鈕下面 */
 .dlg--result .dlg__card {
     align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */

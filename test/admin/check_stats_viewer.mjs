@@ -329,7 +329,7 @@ try {
   ok(q(fn.fill.map(d => [d.day.slice(8), d.plays, d.players])) === q([['01', 0, 0], ['02', 4, 2], ['03', 0, 0], ['04', 0, 0], ['05', 1, 1]]), 'H fillDays：沒人玩的日子補 0');
   ok(fn.alpha[0] > fn.alpha[2] && fn.alpha[2] > fn.alpha[1] && fn.alpha[0] <= 0.7 && fn.alpha[1] >= 0.1, 'H 名次越前面底色越深：' + q(fn.alpha));
   ok(q(fn.add) === q(['2026-11-01', '2025-12-31', '2026-02-28']), 'H addDays 跨月跨年：' + q(fn.add));
-  ok(q(await J('window.__SV.meta.CATS.map(function (c) { return c.name; })')) === q(['記憶', '視覺', '反應', '數字', '邏輯', '手感', '目測']) && await J('window.__SV.meta.ORDER.length') === 190 && await J('Object.keys(window.__SV.meta.GAMES).length') === 190, 'H 七種分類、190 款遊戲的資料');
+  ok(q(await J('window.__SV.meta.CATS.map(function (c) { return c.name; })')) === q(['記憶', '視覺', '反應', '數字', '邏輯', '手感', '目測']) && await J('window.__SV.meta.ORDER.length') === 194 && await J('Object.keys(window.__SV.meta.GAMES).length') === 194, 'H 七種分類、194 款遊戲的資料');
 
   // ═══ I. 版面與深色 ═══
   await open(mock.url);

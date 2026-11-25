@@ -5,6 +5,17 @@
    ═══════════════════════════════════════ */
 
 /* ═══ 跳棋跳最遠（.checkers-）═══ */
+/* 上方（第 X 關、限時橫條）靠緊一點、畫面四周的留白縮小，空間留給棋盤。只對跳棋生效：「#screen 裡面有 .checkers-stage」時才套用（:has 選擇器） */
+.screen:has(> .checkers-stage) {
+    gap: var(--sp-1);                                   /* 子元素之間的空隙：4px（原本是 --sp-3＝12px） */
+    padding: var(--sp-1) var(--sp-2) var(--sp-1);       /* 畫面內縮：上 4px、左右 8px、下 4px（原本四邊 14px） */
+}
+
+/* 「第 X 關」那一行：行高縮小 */
+.screen:has(> .checkers-stage) .rx-head {
+    line-height: 1.15;                                  /* 行高：字高的 1.15 倍 */
+}
+
 .checkers-stage {
     user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
     -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
@@ -19,13 +30,15 @@
     bottom: 0;                                          /* 離下邊 0 */
 }
 
-/* 「checkers-tip」這個元素的樣式 */
+/* 棋盤上方那一行字：作答前是提示，揭曉時換成結果（高度配合 js 的 NOTE_H） */
 .checkers-tip {
     position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
     left: 0;                                            /* 離左邊 0 */
     right: 0;                                           /* 離右邊 0 */
-    top: 8px;                                           /* 離上邊 8px */
-    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    top: 0;                                             /* 離上邊 0 */
+    padding: 0 var(--sp-1);                             /* 內縮（padding，內容跟邊框的距離）：上下 0、左右 --sp-1 */
+    line-height: 1.2;                                   /* 行高：字高的 1.2 倍 */
+    white-space: nowrap;                                /* 不換行（換行會蓋到棋盤） */
     text-align: center;                                 /* 文字置中 */
     pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
@@ -126,13 +139,7 @@
     color: var(--c-card);                               /* 文字顏色：主題變數 --c-card */
 }
 
-/* 「checkers-info」這個元素的樣式 */
-.checkers-info {
-    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
-    left: 0;                                            /* 離左邊 0 */
-    right: 0;                                           /* 離右邊 0 */
-    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
-    text-align: center;                                 /* 文字置中 */
-    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
-    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+/* 揭曉時那一行換成結果：用深色字 */
+.checkers-tip--result {
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }

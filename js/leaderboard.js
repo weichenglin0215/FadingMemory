@@ -85,7 +85,7 @@
     var KEY_FBPEND = 'fm.lb.fbpending';  /* 還沒送出的玩家意見：[ {game, text, at} ]（最多留 5 筆） */
     var KEY_OVERTAKE = 'fm.lb.overtaken'; /* 「阿嬤都比你厲害」的快取：{ at, pid, list: [ {game_id, rank, at}, … ] } */
     var KEY_MYRANKS = 'fm.lb.myranks';   /* 主選單「成績」彈窗的快取：{ at, pid, list: [ {game_id, rank, score}, … ] } */
-    var FB_MAX = 300;                    /* 玩家意見最多幾個字（資料庫 MF_feedback 的檢查也是 300） */
+    var FB_MAX = 600;                    /* 玩家意見最多幾個字（輸入框 js/dialog.js 的 FB_MAX、資料庫 MF_feedback 的檢查與 MF_submit_feedback 的 c_max_len 也都是 600，要改就一起改） */
 
     var Leaderboard = {};
 

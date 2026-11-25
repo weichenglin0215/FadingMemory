@@ -66,7 +66,14 @@ ok(Grade.stage(null, 10) === -1 && Grade.stage(undefined, 10) === -1 && Grade.st
   });
   ok(level >= 140, '闖關／答題遊戲有 ' + level + ' 款（其他 ' + other + ' 款走合理範圍的粗估）'); }
 
-// ── 分類的階段（byCategory）──
+// ── 分類的分數（byCategory）：總分 ÷ 款數 ──
+{ const cp = Grade.categoryPoints;
+  ok(cp(60, 10) === 6, '玩家的例子：60 總分 / 10 款 → 6 分（博士）');
+  ok(cp(0, 10) === 0, '一款都沒玩過（0 分）→ 0（都沒玩過）');
+  ok(cp(1, 10) === 1 && cp(4, 10) === 1 && cp(5, 10) === 1 && cp(10, 10) === 1 && cp(14, 10) === 1, '1 分或不到 1 分（0.1、0.4、0.5、1.0、1.4）都算小學');
+  ok(cp(15, 10) === 2 && cp(20, 10) === 2 && cp(24, 10) === 2 && cp(25, 10) === 3, '四捨五入：1.5→2、2.4→2、2.5→3（高中）');
+  ok(cp(34, 10) === 3 && cp(35, 10) === 4 && cp(55, 10) === 6 && cp(54, 10) === 5 && cp(999, 10) === 6, '3.4→3、3.5→4、5.5→6、5.4→5；最多 6');
+  ok(cp(5, 0) === 0, '分類沒有遊戲（分母 0）不會出錯'); }
 { const tabs = [{ id: 'all', name: '全部' }, { id: 'recent', name: '最近' }, { id: 'a', name: '甲' }, { id: 'b', name: '乙' }, { id: 'c', name: '丙' }, { id: 'd', name: '丁' }];
   const cells = [{ id: 'g1', cat: 'a' }, { id: 'g2', cat: 'a' }, { id: 'g3', cat: 'b' }, { id: 'g4', cat: 'c' }, { id: 'g5', cat: 'c' }];     // 丁（d）沒有任何遊戲
   const spec = { better: 'max', decimals: 0, format: '{v} 關', min: 1, max: 90 }, specFn = () => spec;
@@ -75,33 +82,33 @@ ok(Grade.stage(null, 10) === -1 && Grade.stage(undefined, 10) === -1 && Grade.st
   const rows = Grade.byCategory(tabs, cells, bestFn, specFn);
   ok(rows.map(r => r.id).join() === 'a,b,c', '分類：略過「全部」「最近」；沒有遊戲的分類（丁）不列出：' + rows.map(r => r.id).join());
   const r = (id) => rows.filter(x => x.id === id)[0];
-  ok(r('a').stage === 4 && r('a').value === 5 && r('a').bestId === 'g2' && r('a').bestScore === 21 && r('a').played === 2 && r('a').count === 2, '甲：取階段最高的 g2（第 21 關 → 碩士，雷達值 5）');
-  ok(r('b').stage === 2 && r('b').value === 3 && r('b').bestId === 'g3', '乙：第 10 關 → 高中');
-  ok(r('c').stage === 0 && r('c').value === 1 && r('c').bestId === 'g5' && r('c').played === 1 && r('c').count === 2, '丙：只玩過 g5（第 1 關 → 小學，雷達值 1）');
-  ok(!rows.some(x => x.bestId === 'gOld'), '已經刪掉的遊戲（不在清單裡）的紀錄被忽略');
-  // 沒玩過
+  ok(r('a').sum === 1 + 5 && r('a').count === 2 && r('a').value === 3 && r('a').stage === 2 && r('a').played === 2 && r('a').avg === 3, '甲：小學 1 分＋碩士 5 分 ＝ 6 總分 / 2 款 → 3 分（高中）');
+  ok(r('b').sum === 3 && r('b').count === 1 && r('b').value === 3, '乙：第 10 關（高中 3 分）/ 1 款 → 高中');
+  ok(r('c').sum === 1 && r('c').count === 2 && r('c').played === 1 && r('c').value === 1 && r('c').stage === 0, '丙：只玩過一款（1 分）/ 2 款 ＝ 0.5 → 小學');
+  ok(!rows.some(x => x.sum > 100), '已經刪掉的遊戲（不在清單裡）的紀錄不計分');
   const none = Grade.byCategory(tabs, cells, () => null, specFn);
-  ok(none.length === 3 && none.every(x => x.stage === -1 && x.value === 0 && x.bestId === null && x.played === 0), '都沒玩過：階段 −1、雷達值 0');
-  // 刪遊戲：把 g2 拿掉，甲的結果跟著變
+  ok(none.length === 3 && none.every(x => x.stage === -1 && x.value === 0 && x.sum === 0 && x.played === 0 && x.count > 0), '都沒玩過：0 分（都沒玩過），分母照樣是該類款數');
   const cells2 = cells.filter(c => c.id !== 'g2'), rows2 = Grade.byCategory(tabs, cells2, bestFn, specFn);
-  ok(rows2.filter(x => x.id === 'a')[0].stage === 0 && rows2.filter(x => x.id === 'a')[0].bestId === 'g1' && rows2.filter(x => x.id === 'a')[0].count === 1, '刪掉 g2 之後：甲只剩 g1（第 4 關 → 小學）');
-  // 改分類：把 g2 改成屬於乙
+  ok(rows2[0].count === 1 && rows2[0].sum === 1 && rows2[0].value === 1, '刪掉 g2 之後：甲剩 1 款、1 總分 → 小學');
   const cells3 = cells.map(c => c.id === 'g2' ? { id: 'g2', cat: 'b' } : c), rows3 = Grade.byCategory(tabs, cells3, bestFn, specFn);
-  ok(rows3.filter(x => x.id === 'b')[0].stage === 4 && rows3.filter(x => x.id === 'b')[0].bestId === 'g2' && rows3.filter(x => x.id === 'a')[0].stage === 0, '把 g2 改成乙：乙變碩士、甲退回小學');
-  // 增減分類
+  ok(rows3.filter(x => x.id === 'b')[0].sum === 8 && rows3.filter(x => x.id === 'b')[0].count === 2 && rows3.filter(x => x.id === 'b')[0].value === 4 && rows3.filter(x => x.id === 'a')[0].sum === 1, '把 g2 改成乙：乙 8 總分 / 2 款 → 大學；甲只剩 1 分');
   const tabs2 = tabs.filter(t => t.id !== 'b'), rows4 = Grade.byCategory(tabs2, cells, bestFn, specFn);
   ok(rows4.map(x => x.id).join() === 'a,c', '拿掉乙這個分類：只剩甲、丙');
   const tabs3 = tabs.concat([{ id: 'e', name: '戊' }]), cells4 = cells.concat([{ id: 'g6', cat: 'e' }]), rows5 = Grade.byCategory(tabs3, cells4, (id) => id === 'g6' ? 30 : bestFn(id), specFn);
-  ok(rows5.length === 4 && rows5[3].id === 'e' && rows5[3].stage === 5 && rows5[3].value === 6, '新增戊分類、加一款遊戲：多一條軸（第 30 關 → 博士，雷達值 6）');
+  ok(rows5.length === 4 && rows5[3].id === 'e' && rows5[3].sum === 6 && rows5[3].count === 1 && rows5[3].value === 6, '新增戊分類、加一款遊戲（博士 6 分 / 1 款）→ 博士');
+  const ten = [...Array(10)].map((_, i) => ({ id: 't' + i, cat: 'a' })), rows6 = Grade.byCategory([{ id: 'a', name: '記憶' }], ten, () => 30, specFn);
+  ok(rows6[0].sum === 60 && rows6[0].count === 10 && rows6[0].value === 6, '10 款全部博士 → 60 總分 / 10 款 → 博士');
+  const eight = Grade.byCategory([{ id: 'a', name: '甲' }], ten, (id) => Number(id.slice(1)) < 8 ? 10 : null, specFn);
+  ok(eight[0].played === 8 && eight[0].sum === 24 && eight[0].count === 10 && eight[0].value === 2, '10 款玩過 8 款（每款高中 3 分）＝ 24 / 10 ＝ 2.4 → 中學（沒玩過的算 0 分）');
   ok(Grade.byCategory(null, null, bestFn, specFn).length === 0, '沒有分類／遊戲清單：空陣列（不會當掉）'); }
 
-// ── 真正的選單：分類都有遊戲、分類的階段全部算得出來 ──
+// ── 真正的選單：分類都有遊戲、全部玩到最好時每類都是博士 ──
 { const src = fs.readFileSync(ROOT + 'js/menu.js', 'utf8');
   const tabs = [...src.matchAll(/\{ id: '([a-z]+)', name: '([^']+)' \}/g)].map(m => ({ id: m[1], name: m[2] }));
   const cells = [...src.matchAll(/\{ id: '([a-z0-9]+)', name: '[^']+', cat: '([a-z]+)', img:/g)].map(m => ({ id: m[1], cat: m[2] }));
   const specs = global.window.FM_SCORE_SPECS;
   const rows = Grade.byCategory(tabs, cells, (id) => specs[id] ? (specs[id].better === 'min' ? specs[id].min : specs[id].max) : null, (id) => specs[id]);
-  ok(rows.length === 7 && rows.every(x => x.count >= 5 && x.stage >= 0), '目前的選單：' + rows.length + ' 個分類（' + rows.map(x => x.name + x.count).join('、') + '），每個分類都有遊戲、玩到最好都有階段'); }
+  ok(rows.length === 7 && rows.every(x => x.count >= 5 && x.value === 6 && x.sum === 6 * x.count), '目前的選單：' + rows.length + ' 個分類（' + rows.map(x => x.name + x.count).join('、') + '），每款都最好時每類都是博士（總分＝6 × 款數）'); }
 
 // ── 雷達圖幾何 ──
 { const FS = global.FMStrengths;
@@ -115,8 +122,17 @@ ok(Grade.stage(null, 10) === -1 && Grade.stage(undefined, 10) === -1 && Grade.st
   ok(FS.polygon([9, -3], 6, 0, 0, 10, -90).every(p => Math.hypot(p.x, p.y) <= 10 + 1e-9), '超出範圍的值被限制在 0～最大');
   for (const n of [3, 4, 5, 7, 9, 12]) { const a = FS.axisPoints(n, 0, 0, 1, -90); ok(a.length === n && a.every(p => Math.abs(Math.hypot(p.x, p.y) - 1) < 1e-9), n + ' 個分類也畫得出 ' + n + ' 條軸'); }
   const m = FS.model({ tabs: [{ id: 'all', name: '全部' }, { id: 'x', name: '甲' }], cells: [{ id: 'q', cat: 'x' }], bestOf: () => 12, specOf: () => ({ better: 'max', decimals: 0, format: '{v} 關', min: 1, max: 90 }) });
-  ok(m.length === 1 && m[0].name === '甲' && m[0].stage === 2 && m[0].value === 3, 'model(env)：用傳進來的分類、遊戲、成績算（第 12 關 → 高中）'); }
+  ok(m.length === 1 && m[0].name === '甲' && m[0].sum === 3 && m[0].count === 1 && m[0].stage === 2 && m[0].value === 3, 'model(env)：用傳進來的分類、遊戲、成績算（第 12 關 → 3 分 / 1 款 → 高中）');
+  ok(FS.gradeName(0) === '都沒玩過' && FS.gradeName(1) === '小學' && FS.gradeName(6) === '博士', '分數 0＝「都沒玩過」、1～6＝小學～博士'); }
 
+// ── 顏色（紅橙黃綠藍紫）與全畫面彈窗 ──
+{ const theme = fs.readFileSync(ROOT + 'css/theme.css', 'utf8'), nav = fs.readFileSync(ROOT + 'css/menu_nav.css', 'utf8').replace(/[ \t]*\/\*[\s\S]*?\*\//g, ''), st = fs.readFileSync(ROOT + 'js/strengths.js', 'utf8');
+  const hue = (n) => { const m = new RegExp('--c-grade-' + n + ': hsl\\((\\d+),').exec(theme); return m ? +m[1] : -1; };
+  const h = [1, 2, 3, 4, 5, 6].map(hue);
+  ok((h[0] < 12 || h[0] > 345) && h[1] >= 18 && h[1] <= 36 && h[2] >= 40 && h[2] <= 62 && h[3] >= 90 && h[3] <= 165 && h[4] >= 190 && h[4] <= 235 && h[5] >= 255 && h[5] <= 300, '六個階段的色相依序是紅、橙、黃、綠、藍、紫：' + h.join('、'));
+  [1, 2, 3, 4, 5, 6].forEach(n => ok(new RegExp('\\.str-row__stage--g' + n + '\\s*\\{[^}]*var\\(--c-grade-' + n + '\\)').test(nav) && new RegExp('\\.str-grade--g' + n + '\\s*\\{[^}]*var\\(--c-grade-' + n).test(nav), '清單藥丸與雷達圖文字：第 ' + n + ' 階用 --c-grade-' + n));
+  ok(/\.dlg\.dlg--strengths\s*\{[^}]*top:\s*0/.test(nav) && /\.dlg--strengths \.dlg__card\s*\{[^}]*max-width:\s*none[^}]*height:\s*100%/.test(nav) && !/\.dlg--strengths \.dlg__card\s*\{[^}]*border-radius:\s*0/.test(nav), '「我的強項」彈窗是全畫面（保留圓角）');
+  ok(!/每類取玩得最好/.test(st) && !/str-note/.test(st) && /總分 \/ /.test(st), '「每類取玩得最好的一款…」說明拿掉了；清單寫「N 總分 / M 款」'); }
 // ── 檔案接線 ──
 { const boot = fs.readFileSync(ROOT + 'js/boot.js', 'utf8'), kit = fs.readFileSync(ROOT + 'js/reaction_kit.js', 'utf8'), menu = fs.readFileSync(ROOT + 'js/menu.js', 'utf8'), nav = fs.readFileSync(ROOT + 'js/menu_nav.js', 'utf8');
   const page = (name) => { const i = boot.indexOf(name + ': {'); return boot.slice(i, i + 12000); };

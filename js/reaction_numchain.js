@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_numchain.js — 秒反應・連號長龍
-   介面與操作（盤面、拖曳／點選、「浮窗」「快速拖曳」「確定」、掉落動畫）跟「拖曳湊十」共用 js/numgrid_ui.js、css/numgrid.css；這個檔案只有「連號長龍的規則」。
+   介面與操作（盤面、拖曳、手指一離開就計算、「浮窗」、掉落動畫）跟「拖曳湊十」共用 js/numgrid_ui.js、css/numgrid.css；這個檔案只有「連號長龍的規則」。
    方格裡每一格有一個 1～9 的數字。手指從一格拖到上下左右相鄰的格子，**每一步數字要剛好差 1**
    （例如 2→3→4→5→4→3→4，可以往上也可以往下），**至少連 3 格**，把這些方格收走拿分。
    連 n 格得 1＋2＋…＋n 分（3 格＝6 分、4 格＝10 分、5 格＝15 分），所以**越長越划算**。
@@ -8,8 +8,8 @@
    棋盤大小隨關卡變大：第 1 關 5×7，第 20 關起 8×11（參數在 js/numgrid_ui.js 的 GRID_W、GRID_H、GRID_RAMP_LEVELS）。
    ───────────────────────────────────────────────────────────────────
    · 闖關制：每一關有「目標分數」，**不限拖曳次數**，在時間內湊到目標分數就過關；時間到就失敗（會把盤面上目前最長的一串標出來）。
-   · 挑選的規則：拖曳要往相鄰、數字差 1 的格子拖；點選沒有先後順序的限制（先點中間的也可以），按「確定」的時候才檢查這些格子能不能排成一串
-     （相鄰、一格差 1），至少 3 格（chainOrder）。操作方式（拖曳、點選、浮窗、快速拖曳）見 js/numgrid_ui.js 開頭。
+   · 挑選的規則：拖曳只能往相鄰、數字差 1 的格子接；手指一離開就檢查（chainOrder），至少 3 格才收走。
+     操作方式（拖曳、浮窗）見 js/numgrid_ui.js 開頭。
    · 掉下來的新數字（fillNew，這款遊戲的核心）：**收走之後，每一欄剩下的方格往下掉到底，缺幾格就從上面補幾格新的**。
      因為方格怎麼掉是算得出來的（collapse），新方格「最後停在哪一格」在掉下來之前就知道了，
      所以**先看停下來之後，它四周（上下左右）的格子是什麼數字，再決定它要寫什麼數字**：
@@ -34,7 +34,7 @@
     var kit = Reaction.kit, NG = Reaction.numGrid;      /* kit：闖關遊戲共用的工具箱；NG：數字方格系列共用的引擎與介面（js/numgrid_ui.js） */
 
     /* ═══ 可以自己調的參數 ═══
-       （盤面大小、浮窗、快速拖曳、數字高度、掉落動畫這些「兩款共用的介面參數」在 js/numgrid_ui.js） */
+       （盤面大小、浮窗、數字高度、掉落動畫這些「兩款共用的介面參數」在 js/numgrid_ui.js） */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var TIME_S = [120, 600];                     /* 每關限時（秒）：第 1 關 → 到頂（不限拖曳次數，所以「目標分數」與「時間」一起決定難度） */
     var TARGET = [300, 900];                     /* 過關的目標分數：第 1 關 → 到頂（越高越難；連 5 格 15 分、連 8 格 36 分、連 10 格 55 分；簡單關卡一串平均約 8～10 格、難的關卡約 4～5 格，可以拿這個估要收幾串） */
@@ -172,11 +172,11 @@
     }
 
     /* ── 玩的狀態 ──
-       st：{ gr（棋盤）, vals（每格目前的數字）, sel（目前挑選的格子，依挑選的先後）, score（已得分）, done（已收走幾串）, level } */
+       st：{ gr（棋盤）, vals（每格目前的數字）, sel（這次拖曳挑到的格子，依拖的順序）, score（已得分）, done（已收走幾串）, level } */
     function newState(q) { return { gr: q.gr, vals: q.vals.slice(), sel: [], score: 0, done: 0, level: q.level || 1 }; }
 
     /* 這些挑選的格子（cells）能不能排成一串？（每一格都有數字、一格接一格相鄰、數字差 1、每格只用一次）能就回傳排好的順序，不能回傳 null。
-       挑選沒有先後順序的限制（點選可以先點中間的），所以這裡找「用掉全部格子的路」（挑選的格子很少，直接用深度優先搜尋） */
+       不看傳進來的先後順序，找「用掉全部格子的路」（格子很少，直接用深度優先搜尋）；拖曳挑到的本來就是一條路，這裡照樣驗證一次、不靠介面保證 */
     function chainOrder(gr, vals, cells) {
         var set = {}, list = [];
         cells.forEach(function (k) { if (!set[k]) { set[k] = 1; list.push(k); } });
@@ -210,12 +210,11 @@
     /* 拖曳的規則：要往數字剛好差 1 的格子拖（相鄰由共用的 NG.dragStep 檢查） */
     function canStep(st, last, k) { return Math.abs(st.vals[k] - st.vals[last]) === 1; }
     function beginDrag(st, k) { return NG.beginDrag(st, k); }
-    function dragStep(st, ss, k) { return NG.dragStep(st, ss, k, canStep); }
-    function endDrag(st, ss) { return NG.endDrag(st, ss); }
+    function dragStep(st, k) { return NG.dragStep(st, k, canStep); }
 
-    /* 收走目前挑選的格子：排得成一串、至少 MIN_CHAIN 格才行——得分、其餘的方格往下掉、上面補新的方格（collapse＋fillNew），盤面沒有夠長的就補一串（ensureChain）。
+    /* 手指離開時收走挑到的格子：排得成一串、至少 MIN_CHAIN 格才行——得分、其餘的方格往下掉、上面補新的方格（collapse＋fillNew），盤面沒有夠長的就補一串（ensureChain）。
        成功回傳 { ok:true, n（這一串幾格）, gain（得幾分）, cells（收走的格子，排好的順序）, oldVals（收走的數字）, moves（掉落）, fresh（新方格的位置）}，挑選清空；
-       不行回傳 { ok:false, reason:'short'（不到 3 格）或 'broken'（連不成一串）, n, cells }，挑選留著（讓玩家改）；沒有挑選就回傳 null */
+       不行回傳 { ok:false, reason:'short'（不到 3 格）或 'broken'（連不成一串）, n, cells }（這裡不動挑選，介面會清掉）；沒有挑選就回傳 null */
     function commit(st, rand) {
         var sel = st.sel;
         if (!sel.length) return null;
@@ -246,10 +245,6 @@
             id: ID, G: G, maxLevel: MAX_LEVEL, rating: rating,
             makePuzzle: makePuzzle, newState: newState, timeMs: timeMs, canStep: canStep, commit: commit,
             logLine: function (q, level) { return '[連號長龍] 第 ' + level + ' 關：棋盤 ' + q.gr.w + '×' + q.gr.h + '、目標 ' + q.target + ' 分；限時 ' + timeMs(level) + ' ms；推算法 ' + JSON.stringify(fillParams(level)); },
-            preview: function (st) {                     /* 現在按「確定」收得走嗎：至少 3 格、排得成一串 */
-                var order = st.sel.length >= MIN_CHAIN ? chainOrder(st.gr, st.vals, st.sel) : null;
-                return { valid: !!order, gain: order ? chainScore(order.length) : 0, used: st.sel.slice(), dropped: [] };
-            },
             failMsg: function (r) { return r.reason === 'short' ? '至少連 ' + MIN_CHAIN + ' 格' : '這些方格連不成一串'; },
             best: function (st, stopAt) { return bestChain(st.gr, st.vals, stopAt || 0, stopAt ? 60000 : 30000); },
             links: function (st) {                       /* 挑選的格子裡，彼此相鄰又差 1 的兩格連一條線（看得出哪些接起來了、哪些是孤零零的） */
@@ -266,18 +261,18 @@
     var G = {
         id: ID,
         name: '連號長龍',
-        rule: '方格裡每一格有一個 1～9 的數字。**手指從一格拖到上下左右相鄰的格子，每一步數字要剛好差 1**，例如 2、3、4、3、2。也可以**用點的：點一下挑選，再點一下已經挑選的方格就放棄它**。**至少連 3 格**，按下面的「確定」就把這些方格收走拿分：連 n 格得 1＋2＋…＋n 分（3 格 6 分、4 格 10 分、5 格 15 分），越長越划算。勾選「快速拖曳」，手指一離開就直接收走，不用按「確定」。勾選「浮窗」，手指上方會浮出手指附近的九格，不怕被手指擋住。收走的格子消失後，上面的方格會往下掉，最上面再掉下新的方格補滿。**不限拖曳次數，在時間內湊到目標分數**就過關。時間到就結束，看你能過幾關。',
+        rule: '方格裡每一格有一個 1～9 的數字。**手指從一格拖到上下左右相鄰的格子，每一步數字要剛好差 1**，例如 2、3、4、3、2；拖回上一格可以收回一格。**至少連 3 格，手指一離開就收走拿分**：連 n 格得 1＋2＋…＋n 分（3 格 6 分、4 格 10 分、5 格 15 分），越長越划算。勾選「浮窗」，手指上方會浮出手指附近的九格，不怕被手指擋住。收走的格子消失後，上面的方格會往下掉，最上面再掉下新的方格補滿。**不限拖曳次數，在時間內湊到目標分數**就過關。時間到就結束，看你能過幾關。',
         mount: mount,
         score: SCORE,
         /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             gridOf: gridOf, neighbors: neighbors, adjacent: adjacent, chainScore: chainScore, ramp: ramp, targetFor: targetFor, timeMs: timeMs, dimsFor: NG.dimsFor, gridFor: NG.gridFor, fillParams: fillParams, minBestFor: minBestFor,
             collapse: collapse, runFrom: runFrom, potentialOf: potentialOf, pickValue: pickValue, fillNew: fillNew, bestChain: bestChain, longestChain: longestChain, hasChain: hasChain,
-            growWalk: growWalk, walkValues: walkValues, ensureChain: ensureChain, makePuzzle: makePuzzle, newState: newState, chainOrder: chainOrder, beginDrag: beginDrag, dragStep: dragStep, endDrag: endDrag,
+            growWalk: growWalk, walkValues: walkValues, ensureChain: ensureChain, makePuzzle: makePuzzle, newState: newState, chainOrder: chainOrder, beginDrag: beginDrag, dragStep: dragStep,
             commit: commit, rating: rating, bounce: NG.bounce, loupeAt: NG.loupeAt, getOpts: NG.getOpts,
             RAMP_LEVELS: RAMP_LEVELS, TIME_S: TIME_S, TARGET: TARGET, GRID_W: NG.GRID_W, GRID_H: NG.GRID_H, GRID_RAMP_LEVELS: NG.GRID_RAMP_LEVELS, MIN_CHAIN: MIN_CHAIN, DIAG: NG.DIAG,
             ASSIST_P: ASSIST_P, AIM_LEN: AIM_LEN, PICK_K: PICK_K, BREAK_P: BREAK_P, MIN_BEST_LEN: MIN_BEST_LEN, HIT: NG.HIT, DIGIT_H: NG.DIGIT_H, MAX_LEVEL: MAX_LEVEL,
-            DEFAULT_LOUPE: NG.DEFAULT_LOUPE, DEFAULT_FAST: NG.DEFAULT_FAST, LOUPE_CELL_MAX: NG.LOUPE_CELL_MAX, BAR_H: NG.BAR_H, CELL_MAX: NG.CELL_MAX
+            DEFAULT_LOUPE: NG.DEFAULT_LOUPE, LOUPE_CELL_MAX: NG.LOUPE_CELL_MAX, BAR_H: NG.BAR_H, CELL_MAX: NG.CELL_MAX
         }
     };
     /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */

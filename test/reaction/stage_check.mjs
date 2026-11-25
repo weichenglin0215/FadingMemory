@@ -3,7 +3,8 @@
 //   · 各種常見視窗大小（手機、iPad 直式／橫式、桌機）：舞台高度＝視窗高度（視窗夠寬時），或舞台寬度＝視窗寬度（視窗很窄時），置中、不超出
 //   · 模擬 visualViewport 回報成一半高度：舞台仍然充滿
 //   · 模擬 visualViewport 與 innerHeight 都回報成一半（只剩 CSS 的 100dvh 是對的）：舞台仍然充滿
-//   · 模擬正在輸入文字（鍵盤彈出、visualViewport 縮小）：舞台縮進可見範圍；收起鍵盤後 1.5 秒內長回來
+//   · 模擬正在輸入文字（鍵盤彈出、visualViewport 縮小）：舞台維持原來的大小（字不變小），只上下平移讓輸入框看得到；
+//     就算 innerHeight、100dvh 跟著變小（有些 Android 瀏覽器）也一樣；收起鍵盤後回到原位
 //   · 瀏覽器漏發 resize 事件：0.4 秒的監看會自己重算
 //   · 縮小、再放大視窗：跟著變
 // 前置：先把專案用本機伺服器開起來（在專案根目錄執行  python -m http.server 8743）。
@@ -79,23 +80,37 @@ const ok = (c, m) => { total++; if (!c) { bad++; console.log('FAIL', m); } };
     ok(dvh === 1180, '100dvh 探針量到 1180（' + dvh + '）');
     ok(r.h > 1170, '(b) visualViewport 與 innerHeight 都只有一半 → 靠 100dvh 仍充滿（' + r.h.toFixed(0) + '）');
     
-    // ═══ 3. 輸入文字（鍵盤）時縮進可見範圍，收起後長回來 ═══
+    // ═══ 3. 輸入文字（鍵盤）時舞台不縮小，只平移讓輸入框看得到 ═══
     await size(820, 1180);
     await load('reaction.html?game=speed');
     await sleep(200);
+    const before = await rect();
+    // 在舞台下半部放一個輸入框，模擬鍵盤把下面蓋住（看得到的高度只剩 600）
     await cdp.evalJs(`(function(){
-      var i = document.createElement('input'); i.id = 'kb-test'; i.style.cssText = 'position:fixed;left:0;top:0;width:10px;height:10px;opacity:0.01';
-      document.body.appendChild(i); i.focus();
+      var i = document.createElement('input'); i.id = 'kb-test'; i.style.cssText = 'position:absolute;left:40px;top:640px;width:200px;height:50px';
+      document.getElementById('stage').appendChild(i); i.focus();
       Object.defineProperty(window.visualViewport, 'height', { get: function () { return 600; }, configurable: true });
     })()`);
     await sleep(700);
+    const field = () => cdp.evalJs('(function(){ var r = document.getElementById("kb-test").getBoundingClientRect(); return { t: r.top, b: r.bottom }; })()');
     r = await rect();
+    let f = await field();
     ok(await cdp.evalJs('document.activeElement && document.activeElement.id') === 'kb-test', '輸入框有焦點');
-    ok(Math.abs(r.h - 600) <= 2, '鍵盤彈出（visualViewport 只剩 600）→ 舞台縮進可見範圍：' + r.h.toFixed(0));
+    ok(Math.abs(r.h - before.h) <= 1.5 && Math.abs(r.w - before.w) <= 1.5, '鍵盤彈出 → 舞台大小不變：' + r.w.toFixed(0) + '×' + r.h.toFixed(0));
+    ok(f.t >= 0 && f.b <= 600.5, '鍵盤彈出 → 舞台往上移，輸入框在看得到的範圍裡（' + f.t.toFixed(0) + '～' + f.b.toFixed(0) + '）');
+    ok(await cdp.evalJs('document.getElementById("stage").classList.contains("stage-typing")'), '鍵盤開著的記號 stage-typing');
+    // 有些瀏覽器鍵盤出來時 innerHeight、100dvh 也跟著變小：舞台一樣不縮小
+    await size(820, 600);
+    await sleep(900);
+    r = await rect(); f = await field();
+    ok(Math.abs(r.h - before.h) <= 1.5, 'innerHeight／100dvh 跟著變小 → 舞台大小仍不變（' + r.h.toFixed(0) + '）');
+    ok(f.t >= 0 && f.b <= 600.5, '這時輸入框仍看得到（' + f.t.toFixed(0) + '～' + f.b.toFixed(0) + '）');
+    await size(820, 1180);
     await cdp.evalJs('document.getElementById("kb-test").blur(); delete window.visualViewport.height;');
     await sleep(1500);
     r = await rect();
-    ok(r.h > 1170, '收起鍵盤後 1.5 秒內舞台長回充滿高度（' + r.h.toFixed(0) + '）');
+    ok(Math.abs(r.h - before.h) <= 1.5 && Math.abs(r.y - before.y) <= 1.5, '收起鍵盤後回到原本的大小與位置（' + r.h.toFixed(0) + '，上緣 ' + r.y.toFixed(0) + '）');
+    ok(!(await cdp.evalJs('document.getElementById("stage").classList.contains("stage-typing")')), '收起鍵盤後記號拿掉');
 
     // ═══ 4. 漏發 resize：不靠事件，0.4 秒的監看自己會重算 ═══
     await size(820, 1180);

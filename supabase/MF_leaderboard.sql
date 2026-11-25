@@ -1425,11 +1425,17 @@ on conflict (game_id) do update
     set title = excluded.title, better = excluded.better,
         min_score = excluded.min_score, max_score = excluded.max_score;
 
+-- 「全站意見」：主選單漢堡選單的「我有話要說」用的代號。意見資料表的 game_id 一定要是 MF_games 登記過的，所以放一列。
+-- 它「不是遊戲」：enabled＝false（不能送成績、不能評價、不計局數、管理者統計也不列出），只有 MF_submit_feedback 特別放行。
+insert into public."MF_games" (game_id, title, better, min_score, max_score, enabled) values
+    ('site', '全站意見（主選單）', 'max', 0, 0, false)
+on conflict (game_id) do update set title = excluded.title, enabled = false;
+
 
 -- ═══ 5. 玩家意見（結算彈窗最下方的「我有話要說」）═══
 -- 每一則意見記著是哪一款遊戲（game_id，必須是 MF_games 登記過的），所以可以分遊戲看。
 -- 防濫用：同一位玩家（player_id）24 小時內最多 200 則；10 分鐘內重複送同樣的內容只算一則；
---         內容 2～300 字，控制字元與零寬字元會被清掉。
+--         內容 2～600 字（V1.57.5 以前是 300），控制字元與零寬字元會被清掉。
 -- 每一則意見除了遊戲代號（game_id，英文），還有「遊戲中文名稱」（game_title）：寫入時自動從 MF_games.title 帶入，
 -- 管理者看資料表時不用再對照英文代號。（遊戲改名之後重新執行這份 SQL，舊的意見也會一起換成新名稱。）
 -- 意見不是機密，所以「任何人都能查閱」：下面建了一個公開的檢視表 MF_feedback_public（除了 player_id 以外的所有欄位），
@@ -1452,10 +1458,14 @@ create table if not exists public."MF_feedback" (
     game_title  text,                       -- 遊戲中文名稱（寫入時自動從 MF_games.title 帶入）
     player_id   uuid         not null,
     nickname    text         check (nickname is null or char_length(nickname) between 1 and 12),
-    message     text         not null check (char_length(message) between 2 and 300),
+    message     text         not null check (char_length(message) between 2 and 600),
     app_version text         check (app_version is null or char_length(app_version) <= 32),
     created_at  timestamptz  not null default now()
 );
+
+-- V1.57.5：意見字數上限從 300 改成 600。已經建好的資料表不會被上面的 create table if not exists 更新，這裡把舊的字數檢查換掉（可重複執行）。
+alter table public."MF_feedback" drop constraint if exists "MF_feedback_message_check";
+alter table public."MF_feedback" add constraint "MF_feedback_message_check" check (char_length(message) between 2 and 600);
 
 -- 舊版資料庫（V1.21.0～V1.22.x）的 MF_feedback 還沒有 game_title：補上這一欄（已經有就略過）。
 -- 注意：Postgres 不能把新欄位插在中間，舊資料表補上的欄位會排在最右邊（Table Editor 裡可以把欄位標題拖到想要的位置）。
@@ -1504,7 +1514,7 @@ security definer
 set search_path = ''
 as $$
 declare
-    c_max_len   constant int := 300;     -- 意見最多幾個字（前端的輸入框也是 300）
+    c_max_len   constant int := 600;     -- 意見最多幾個字（前端的輸入框也是 600）
     c_per_day   constant int := 200;      -- 同一位玩家 24 小時內最多幾則
     v_title     text;
     v_msg       text;
@@ -1513,8 +1523,9 @@ declare
     v_ver       text;
     v_count     int;
 begin
-    -- (1) 遊戲要登記過（順便取得中文名稱，一起存進意見：管理者看資料表時才看得懂是哪一款遊戲）
-    select title into v_title from public."MF_games" where game_id = p_game_id and enabled;
+    -- (1) 遊戲要登記過（順便取得中文名稱，一起存進意見：管理者看資料表時才看得懂是哪一款遊戲）。
+    --     'site' 是主選單的「全站意見」，它在 MF_games 是停用的（不是遊戲），這裡特別放行。
+    select title into v_title from public."MF_games" where game_id = p_game_id and (enabled or game_id = 'site');
     if not found then
         return jsonb_build_object('ok', false, 'error', 'unknown_game');
     end if;
@@ -1522,7 +1533,7 @@ begin
         return jsonb_build_object('ok', false, 'error', 'bad_args');
     end if;
     -- (2) 清理內容：換行統一成 \n；控制字元（保留換行與 Tab）、零寬字元、文字方向控制字元換成空格；
-    --     行內連續空白縮成一個；連續三個以上的換行縮成兩個；去頭尾空白；最多 300 個字
+    --     行內連續空白縮成一個；連續三個以上的換行縮成兩個；去頭尾空白；最多 600 個字
     v_msg := replace(replace(coalesce(p_message, ''), E'\r\n', E'\n'), E'\r', E'\n');
     v_msg := regexp_replace(v_msg, '[\x01-\x08\x0b\x0c\x0e-\x1f\x7f​-‏‪-‮⁠-⁤﻿]+', ' ', 'g');
     v_msg := regexp_replace(v_msg, '[ \t]+', ' ', 'g');

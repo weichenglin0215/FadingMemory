@@ -11,11 +11,13 @@
         所以手機與電腦的 3D 構圖一模一樣。
    3. 可用區域 = 「瀏覽器現在真正看得到的範圍」再扣掉 safe-area（瀏海、Home 條）。
       量法（V1.23.0 改成更耐用，見 readViewport）：
-        · 平常（沒在打字、沒被放大）：visualViewport、window.innerWidth／innerHeight、CSS 的 100dvh
+        · 平常：visualViewport、window.innerWidth／innerHeight、CSS 的 100dvh
           三個來源「取最大」——iPad Safari 偶爾有某個來源回報過小的值（畫面縮在上半部、重新載入也一樣），
           只要有一個來源是對的，就不會被拖小；
-        · 正在輸入文字（手機鍵盤彈出）或使用者把頁面放大：改用 visualViewport，
-          讓舞台縮進「沒被鍵盤擋住」的範圍／跟著可見區域移動，不會露出底色。
+        · 正在輸入文字（手機鍵盤彈出）：舞台「維持原來的大小」，字不會變小；鍵盤蓋住下半部時，
+          只把舞台往上平移到看得見正在打字的地方（見 panForTyping）。
+          （V1.57.4 以前是把整個舞台縮進鍵盤上方，玩家回報字太小看不清楚。）
+        · 使用者把頁面放大：改用 visualViewport，讓舞台跟著可見區域移動，不會露出底色。
       而且不只等 resize 事件：載入後短時間內多量幾次，之後每 0.4 秒自己再量一次，數字變了就重算，
       所以就算瀏覽器漏發事件（iPad 轉向、收起鍵盤之後最常見），畫面也會自己長回正確大小。
       網址加 ?debug 會顯示各來源量到的數字（iPad 還是不對時，請截圖回報）。
@@ -33,6 +35,8 @@
     var DESIGN_W = 500;
     var DESIGN_H = 850;
     var MAX_DPR = 2;
+    var KB_MIN = 120;        /* 看得到的高度比整個畫面少超過這麼多像素，才算「螢幕鍵盤開著」（網址列收合只差幾十像素） */
+    var KB_MARGIN = 6;       /* 打字時，要看得到的區塊跟可視範圍上下邊緣至少留幾個螢幕像素 */
 
     var stageEl = null;
     var worldEl = null;
@@ -40,6 +44,7 @@
     var dvhEl = null;        /* 高度是 100dvh 的隱形探針：用 CSS 單位量「目前真正的可視高度」，不經過 JS 的 innerHeight／visualViewport */
     var debugEl = null;
     var lastSig = '';        /* 上一次套用時的可視範圍簽章；監看時發現數字變了就重算 */
+    var calm = null;         /* 最後一次「沒在打字、沒放大」時量到的可視範圍 { vw, vh }：打字時沿用它，舞台不會跟著鍵盤變小 */
     var watchTimer = 0;
     var subs = [];
     var pending = 0;
@@ -62,7 +67,7 @@
         };
     }
 
-    /* 目前是不是正在輸入文字（輸入框／文字區有焦點）：手機的螢幕鍵盤會擋住下半部，這時舞台要縮進剩下的範圍 */
+    /* 目前是不是正在輸入文字（輸入框／文字區有焦點）：手機的螢幕鍵盤會擋住下半部 */
     function isEditing() {
         var a = document.activeElement;
         if (!a || a === document.body) return false;
@@ -70,12 +75,14 @@
         return t === 'input' || t === 'textarea' || t === 'select' || a.isContentEditable === true;
     }
 
-    /* 讀「可視範圍」。回傳 { vw, vh, ox, oy, src }：寬、高、可視範圍左上角的偏移、各來源量到的原始數字（?debug 顯示用）。
+    /* 讀「可視範圍」。回傳 { vw, vh, ox, oy, seeTop, seeH, src }：舞台要照多大的範圍排版（寬、高、左上角偏移）、
+       目前「真正看得到」的上緣與高度（打字時鍵盤蓋住的部分不算）、各來源量到的原始數字（?debug 顯示用）。
        · 一般情況：visualViewport、innerWidth／innerHeight、100dvh 取最大。
          （為什麼取最大：這些來源正常時完全一樣；iPad 上曾經有某一個來源回報成「螢幕的一半」，而且重新載入也一樣，
            取最大值就不會被那個錯的數字拖小。）
-       · 輸入文字中、或頁面被放大（visualViewport.scale > 1）：只相信 visualViewport——
-         那時候「可見範圍比版面小」是真的（鍵盤擋住一半、放大後只看得到一部分）。 */
+       · 輸入文字中：排版範圍照舊，而且不小於打字之前量到的高度（有些 Android 瀏覽器鍵盤一出來，
+         innerHeight 和 100dvh 也跟著變小）；寬度變了（轉向）就重新量。看得到的範圍另外記在 seeTop／seeH。
+       · 頁面被放大（visualViewport.scale > 1）：只相信 visualViewport——放大後真的只看得到一部分。 */
     function readViewport() {
         var vv = global.visualViewport;
         var iw = global.innerWidth || 0, ih = global.innerHeight || 0;
@@ -88,13 +95,54 @@
         var vh = vv ? vv.height : ih;
         var ox = vv ? vv.offsetLeft : 0;
         var oy = vv ? vv.offsetTop : 0;
+        var seeTop = oy, seeH = vh;
         src.editing = isEditing();
-        src.trusted = !!vv && (src.editing || vv.scale > 1.02);
+        src.trusted = !!vv && vv.scale > 1.02;
         if (!src.trusted) {
             vw = Math.max(vw, iw);
             vh = Math.max(vh, ih, dh);
+            if (!src.editing) calm = { vw: vw, vh: vh };
+            else {
+                if (calm && Math.abs(calm.vw - vw) < 2) vh = Math.max(vh, calm.vh);
+                oy = 0;                                 /* 打字時舞台的位置只由 panForTyping 決定 */
+            }
         }
-        return { vw: vw, vh: vh, ox: ox, oy: oy, src: src };
+        return { vw: vw, vh: vh, ox: ox, oy: oy, seeTop: seeTop, seeH: seeH, src: src };
+    }
+
+    /* 螢幕鍵盤開著時，在舞台上做記號：class「stage-typing」＋ CSS 變數 --kb-visible（鍵盤上方看得到的高度，邏輯 px）。
+       css/dialog.css 的「我有話要說」用它把輸入框調成「連同下面的按鈕都在鍵盤上方」。h 是 0 就拿掉記號。 */
+    function markKeyboard(h) {
+        if (h > 0) {
+            stageEl.style.setProperty('--kb-visible', h + 'px');
+            stageEl.classList.add('stage-typing');
+        } else if (stageEl.classList.contains('stage-typing')) {
+            stageEl.classList.remove('stage-typing');
+            stageEl.style.removeProperty('--kb-visible');
+        }
+    }
+
+    /* 鍵盤開著時：舞台大小不變，只上下平移，讓正在打字的地方不被鍵盤擋住。
+       要看得到的區塊：整張彈窗卡片放得進鍵盤上方就看整張卡片（按鈕也看得到），放不下就只保證看得到輸入框。
+       top 是原本置中的位置，回傳平移後的位置；seeTop／seeH 是看得到的上緣與高度（螢幕像素）。 */
+    function panForTyping(top, scale, seeTop, seeH) {
+        var a = document.activeElement;
+        if (!a || !a.closest || !stageEl.contains(a)) return top;
+        var sb = stageEl.getBoundingClientRect();
+        var now = sb.height / DESIGN_H;                 /* 舞台「現在畫在螢幕上」的縮放倍率 */
+        if (!(now > 0)) return top;
+        function span(el) {                             /* 某個元素在舞台裡的上緣、下緣（邏輯 px，跟舞台目前擺在哪裡無關） */
+            var b = el.getBoundingClientRect();
+            return { a: (b.top - sb.top) / now, b: (b.bottom - sb.top) / now };
+        }
+        var card = a.closest('.dlg__card');
+        var t = card ? span(card) : null;
+        if (!t || (t.b - t.a) * scale > seeH - 2 * KB_MARGIN) t = span(a);
+        var most = seeTop + seeH - KB_MARGIN - t.b * scale;     /* 區塊下緣要看得到：舞台上緣最多放到這裡 */
+        var least = seeTop + KB_MARGIN - t.a * scale;           /* 區塊上緣要看得到：舞台上緣至少放到這裡 */
+        if (top > most) top = most;
+        if (top < least) top = least;                           /* 兩個條件衝突（區塊比看得到的範圍高）：以看得到上緣為主 */
+        return top;
     }
 
     /* 核心計算：「現在這個裝置的可視範圍」要怎麼縮放、置中成 500×850 的舞台。
@@ -116,9 +164,13 @@
         var scale = Math.min(aw / DESIGN_W, ah / DESIGN_H);
         var w = DESIGN_W * scale;
         var h = DESIGN_H * scale;
+        var top = oy + sa.t + (ah - h) / 2;
+        var kb = vp.src.editing && !vp.src.trusted && vp.seeH < vh - KB_MIN;     /* 螢幕鍵盤開著 */
+        if (stageEl) markKeyboard(kb ? Math.floor((vp.seeH - 2 * KB_MARGIN) / scale) : 0);  /* Math.floor：無條件捨去成整數 */
+        if (kb && stageEl) top = panForTyping(top, scale, vp.seeTop, vp.seeH);
         return {
             left: Math.round(ox + sa.l + (aw - w) / 2), /* Math.round：四捨五入成整數 */
-            top: Math.round(oy + sa.t + (ah - h) / 2),
+            top: Math.round(top),
             width: w,
             height: h,
             scale: scale,
@@ -177,7 +229,8 @@
                 '\nvisualViewport ' + Math.round(s.vvW) + '×' + Math.round(s.vvH) + ' scale ' + s.vvScale +
                 '\ninner ' + s.iw + '×' + s.ih + '  100dvh ' + s.dvh +
                 '\nscreen ' + (global.screen ? global.screen.width + '×' + global.screen.height : '?') +
-                '\n輸入中 ' + (s.editing ? '是' : '否') + '  只信 visualViewport ' + (s.trusted ? '是' : '否');
+                '\n輸入中 ' + (s.editing ? '是' : '否') + '  頁面被放大 ' + (s.trusted ? '是' : '否') +
+                '  鍵盤開著 ' + (stageEl.classList.contains('stage-typing') ? '是' : '否');
         }
     }
 

@@ -49,9 +49,8 @@ const PREP = {
   sumten: `(async function(){
     Reaction.current.debug.goto(10);                                  // 第 10 關
     for (var t = 0; t < 40 && !(Reaction.current.debug.api().preview); t++) await new Promise(function (r) { setTimeout(r, 50); });
-    var a = Reaction.current.debug.api(), T = Reaction.current.test, p = T.bestMove(a.info.gr, a.game.vals, 0, 20000);    // 最好的那一串選起來，後面再多拖一格（橘色斜線＝會被放棄的）
-    var ex = T.neighbors(a.info.gr, p[p.length - 1]).filter(function (k) { return p.indexOf(k) < 0 && a.game.vals[k] != null; })[0];
-    a.select(p.concat(ex == null ? [] : [ex]));
+    var a = Reaction.current.debug.api(), T = Reaction.current.test;
+    a.select(T.bestMove(a.info.gr, a.game.vals, 0, 20000));           // 最好的那一串選起來（像手指正拖到一半）
   })()`,
   numchain: `(async function(){
     Reaction.current.debug.goto(10);                                  // 第 10 關

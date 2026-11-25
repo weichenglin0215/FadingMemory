@@ -5,6 +5,8 @@
      「設定」→ 設定彈窗：顯示暱稱、「修改暱稱」按鈕、「音樂音效」喇叭圖示（預設開；點一下切換，關掉＝全部靜音，跟遊戲裡右上角的喇叭是同一個開關）。
               暱稱的規則見 js/identity.js：沒有帳號的訪客還沒有暱稱（成績進世界前 30 名時才請他取），
               所以訪客的「修改暱稱」是灰的，旁邊給一顆「我已有帳號，登入」。
+     「我有話要說」→ 意見彈窗：給「整個網站」的意見（介面、功能、操作、錯誤、想要的新遊戲）；
+              跟各款遊戲結算彈窗的「我有話要說」是同一個彈窗，只是遊戲代號記成 'site'（MF_feedback 的「全站意見（主選單）」）。
      「成績」→ 成績彈窗：每款遊戲的世界名次，由前到後排；右邊的「玩」直接進那款遊戲。列表用手指上下拖曳，放手帶慣性（js/scroller.js，
               跟「選一個想玩的遊戲」、世界排行榜是同一個元件）。
               資料有兩個來源：
@@ -23,6 +25,12 @@
     var ID = global.Identity;
     var M = global.FMMenu;
     var KEY_BEST = 'fm.reaction.best.';
+    /* 主選單的「我有話要說」：不屬於某一款遊戲，遊戲代號記成 'site'（supabase/MF_leaderboard.sql 有登記這個代號） */
+    var SITE_FEEDBACK = { id: 'site' };
+    var SITE_FEEDBACK_TEXT = {
+        sub: '給整個「記憶模糊」的意見',
+        placeholder: '介面好不好用、哪裡看不懂、遇到什麼問題、想要什麼新功能或新遊戲…想說什麼都可以。'
+    };
     var SCROLL_THRESHOLD = 8;          /* 手指移動超過幾個舞台像素才算拖曳（沒超過就是點一下，「玩」按鈕照常收到點擊） */
 
     function sfx(name) { if (global.Sfx) { global.Sfx.unlock(); global.Sfx.play(name); } }  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
@@ -260,6 +268,7 @@
         byId('icon-nav-scores').textContent = '🏆';        /* 「🏆我的成績」「👑我的強項」直接用 emoji 當圖示 */
         byId('icon-nav-strengths').textContent = '👑';
         byId('icon-nav-offline').innerHTML = global.UI.icon('download');
+        byId('icon-nav-feedback').innerHTML = global.UI.icon('chat');
 
         function setOpen(on) {
             pop.hidden = !on;
@@ -278,6 +287,7 @@
         byId('nav-scores').addEventListener('click', function () { setOpen(false); sfx('click'); openScores(); });
         byId('nav-strengths').addEventListener('click', function () { setOpen(false); sfx('click'); if (global.FMStrengths) global.FMStrengths.open(); });
         byId('nav-offline').addEventListener('click', function () { setOpen(false); sfx('click'); if (global.OfflineDialog) global.OfflineDialog.show(); });
+        byId('nav-feedback').addEventListener('click', function () { setOpen(false); sfx('click'); Dlg.feedback(SITE_FEEDBACK, SITE_FEEDBACK_TEXT); });
     }
 
     /* 給 Node 測試用（test/reaction/t_menunav.js） */
