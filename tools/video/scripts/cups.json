@@ -1,0 +1,68 @@
+{
+  "_說明": "「球在哪杯」宣傳影片劇本。底線開頭的欄位只是給人看的說明，工具不會讀。時間單位一律是「秒」。",
+  "_欄位說明": {
+    "type": "title = 片頭；solve = 看完後找出答案；ponder = 看完後只在杯子之間猶豫，不公布答案",
+    "seconds": "這一段在成品裡有幾秒。各段照順序接起來，開始時間自動計算",
+    "level": "錄第幾關。杯子數：每 3 關多一個（第 1 關 3 杯、第 4 關 4 杯、第 16 關 8 杯），關卡越高換得越多次、越快",
+    "watchSpeed": "前面「看杯子換位置」的部分怎麼播。\"fit\" = 從掀杯子看起，自動快轉到剛好塞得下；數字（例如 1.2）= 照這個倍速，只放得下開始作答前的最後一段",
+    "introSec": "watchSpeed 是 \"fit\" 時可用：開頭「掀杯子露出球」在成品裡占幾秒，後面換杯子的部分自動快轉塞進剩下的時間。不寫 = 整段同一個倍速",
+    "thinkBeforeSec": "（solve）換完之後先猶豫幾秒才點正確的杯子",
+    "holdSec": "（solve）掀開答案後停幾秒，最多 0.8（再久遊戲就跳下一關）",
+    "thinkSec": "（ponder）最後手指在杯子之間徘徊幾秒（原速）。影片結束時還沒有答案",
+    "caption": "字幕。startSec 寫 \"think\" = 開始徘徊時才出現，寫數字 = 這一段的第幾秒出現"
+  },
+
+  "game": "cups",
+  "name": "球在哪杯",
+
+  "output": { "width": 1080, "height": 1920, "fps": 30 },
+
+  "seed": 1127,
+  "_seed": "決定球放哪裡、杯子怎麼換。數字不變，重錄時一樣",
+
+  "sound": { "gameSfx": true, "musicFile": "", "musicVolume": 0.3 },
+  "finger": { "show": true, "tapRing": true },
+
+  "segments": [
+    {
+      "id": "demo",
+      "_說明": "0～5 秒：初級關卡，示範玩法",
+      "type": "solve",
+      "seconds": 5,
+      "level": 1,
+      "watchSpeed": "fit",
+      "thinkBeforeSec": 0.3,
+      "holdSec": 0.8
+    },
+    {
+      "id": "title",
+      "_說明": "5～7 秒：片頭",
+      "type": "title",
+      "seconds": 2,
+      "title": "球在哪杯",
+      "subtitle": "眼睛盯緊！球藏在哪一個？",
+      "background": "blur"
+    },
+    {
+      "id": "expert",
+      "_說明": "7～13 秒：高級關卡，找出答案",
+      "type": "solve",
+      "seconds": 6,
+      "level": 16,
+      "watchSpeed": 1.2,
+      "thinkBeforeSec": 0.6,
+      "holdSec": 0.8
+    },
+    {
+      "id": "challenge",
+      "_說明": "13～20 秒：中級關卡，不解開答案，讓觀眾自己猜",
+      "type": "ponder",
+      "seconds": 7,
+      "level": 4,
+      "watchSpeed": "fit",
+      "introSec": 1.5,
+      "thinkSec": 3,
+      "caption": { "text": "只有 3 %玩家能解開", "startSec": "think", "positionY": 0.065, "size": 100 }
+    }
+  ]
+}

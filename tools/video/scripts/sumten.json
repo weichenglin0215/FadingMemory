@@ -1,0 +1,134 @@
+{
+  "_說明": "「拖曳湊十」宣傳影片劇本。改完直接存檔。底線開頭的欄位只是給人看的說明，工具不會讀。時間單位一律是「秒」。（錄影工具還沒做好，做工具時欄位名稱可能微調。）",
+  "_欄位說明": {
+    "seconds": "這一段在成品裡有幾秒。各段照 segments 的順序接起來，開始時間自動計算",
+    "level": "錄第幾關。盤面大小：第 1 關 5×7、第 5 關 6×8、第 10 關 6×9、第 20 關起 8×11",
+    "pickCells": "每一串拖幾格 [最少, 最多]，越多格越壯觀；盤面上找不到就挑格數最接近的",
+    "dragSecPerCell": "手指拖過一格要幾秒，越小越快。寫成 [開頭, 結尾] 表示在這一段裡慢慢加快",
+    "pauseSec": "每一串開始前停下來「想」幾秒。也可以寫 [開頭, 結尾]。另外，消除和掉落動畫約 0.6 秒，這時遊戲不能拖，工具會自動等",
+    "recordSeconds": "先錄幾秒的原始畫面，再從裡面剪出 seconds 秒",
+    "clipStart": "從原始畫面的第幾秒開始剪；\"auto\" = 剪得分最高那一串的前後",
+    "speed": "播放速度：1 = 原速，1.25 = 稍微快轉（聲音一起加快）",
+    "zoom": "鏡頭推近 [開頭倍率, 結尾倍率]。第 20 關起的大盤面超過 1.09 倍就會切到左右兩排",
+    "bigGainText": "true = 消除時在畫面上疊一個大大的得分數字",
+    "positionY": "字幕的高度位置：0 = 畫面最上面，1 = 最下面。0.065 剛好蓋住遊戲的標題列；太靠下面會蓋到盤面，短影音平台的介面也常擋住下方",
+    "size": "字幕的字級（太寬會自動縮小）"
+  },
+  "game": "sumten",
+  "name": "拖曳湊十",
+  "output": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30
+  },
+  "seed": 1127,
+  "_seed": "決定出什麼題目。數字不變，重錄時題目一樣；想換一批題目就改這個數字",
+  "sound": {
+    "gameSfx": true,
+    "musicFile": "",
+    "musicVolume": 0.3
+  },
+  "_sound": "musicFile 留空 = 不加配樂。要加就填音樂檔的路徑（必須是你有權使用的音樂）",
+  "finger": {
+    "show": true,
+    "tapRing": true
+  },
+  "_finger": "show = 顯示虛擬手指；tapRing = 按下去時顯示光圈",
+  "gameOptions": {
+    "loupe": false,
+    "showHint": false
+  },
+  "_gameOptions": "loupe = 遊戲裡的「浮窗」；showHint = 第 1 關內建的操作提示（已經有虛擬手指，預設關掉，避免兩個手指重疊）",
+  "segments": [
+    {
+      "id": "highlight",
+      "_說明": "精彩回顧：高難度關卡的精彩片段，前兩秒就要讓觀眾驚豔",
+      "type": "play",
+      "seconds": 2,
+      "level": 25,
+      "pickCells": [
+        20,
+        30
+      ],
+      "dragSecPerCell": 0.06,
+      "pauseSec": 0.1,
+      "recordSeconds": 12,
+      "clipStart": "auto",
+      "speed": 1.25,
+      "zoom": [
+        1.0,
+        1.09
+      ],
+      "bigGainText": true
+    },
+    {
+      "id": "title",
+      "_說明": "片頭：遊戲名稱和一句玩法",
+      "type": "title",
+      "seconds": 1,
+      "title": "拖曳湊十",
+      "subtitle": "拖曳相鄰數字，剛好湊成 10",
+      "background": "blur",
+      "_background": "blur = 用模糊的遊戲畫面當背景"
+    },
+    {
+      "id": "tutorial",
+      "_說明": "第 1 關：手指慢慢拖，讓觀眾看懂",
+      "type": "play",
+      "seconds": 4,
+      "level": 1,
+      "pickCells": [
+        3,
+        4
+      ],
+      "dragSecPerCell": 0.4,
+      "pauseSec": 0.4
+    },
+    {
+      "id": "combo",
+      "_說明": "跳到第 10 關：加快速度，連續消除",
+      "type": "play",
+      "seconds": 9,
+      "level": 25,
+      "pickCells": [
+        20,
+        30
+      ],
+      "dragSecPerCell": [
+        0.18,
+        0.07
+      ],
+      "pauseSec": [
+        0.35,
+        0
+      ]
+    },
+    {
+      "id": "challenge",
+      "_說明": "第 5 關題目畫面，手指來回拖曳錯誤的路線，加上字幕",
+      "type": "wrongDrag",
+      "seconds": 4,
+      "level": 5,
+      "pathCells": [
+        3,
+        6
+      ],
+      "_pathCells": "每次錯誤嘗試把這一串拖到幾格長 [最少, 最多]",
+      "backCells": [
+        1,
+        3
+      ],
+      "_backCells": "拖錯後往回退幾格 [最少, 最多]，再換一個方向",
+      "dragSecPerCell": 0.22,
+      "pauseSec": 0.3,
+      "releaseAtEnd": false,
+      "_releaseAtEnd": "false = 手指還按在盤面上就結束，留下懸念；true = 最後放開手指，格子閃紅並播答錯音效",
+      "caption": {
+        "text": "只有 3 %玩家能通過",
+        "startSec": 0.3,
+        "positionY": 0.065,
+        "size": 100
+      }
+    }
+  ]
+}

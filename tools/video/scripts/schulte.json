@@ -1,0 +1,32 @@
+{
+  "_說明": "「數字方陣」宣傳影片劇本：從 1 開始依序快點，越點越慢，最後只徘徊不點。底線開頭的欄位只是給人看的說明，工具不會讀。時間單位一律是「秒」。",
+  "_欄位說明": {
+    "seconds": "整支影片幾秒",
+    "thinkSec": "最後幾秒完全不點任何數字，手指只在畫面上徘徊",
+    "tapGapSec": "兩次點擊的間隔 [開頭, 快到徘徊時]。開頭的數字越小點得越快，後面的數字越大結尾越慢。前半段幾乎維持開頭的速度，後面慢得越來越明顯。間隔長的時候，手指會先在別的格子之間看一看",
+    "caption": "字幕。startSec 寫 \"think\" = 開始徘徊時才出現，寫數字 = 第幾秒出現"
+  },
+
+  "game": "schulte",
+  "name": "數字方陣",
+
+  "output": { "width": 1080, "height": 1920, "fps": 30 },
+
+  "seed": 1127,
+  "_seed": "決定數字怎麼排。數字不變，重錄時一樣",
+
+  "sound": { "gameSfx": true, "musicFile": "", "musicVolume": 0.3 },
+  "finger": { "show": true, "tapRing": true },
+
+  "segments": [
+    {
+      "id": "main",
+      "_說明": "0～15 秒依序點擊、越來越慢；15～20 秒只徘徊",
+      "type": "tapOrder",
+      "seconds": 20,
+      "thinkSec": 5,
+      "tapGapSec": [0.35, 2.0],
+      "caption": { "text": "只有 3 %玩家能解開", "startSec": "think", "positionY": 0.065, "size": 100 }
+    }
+  ]
+}

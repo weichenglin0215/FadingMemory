@@ -1,0 +1,72 @@
+{
+  "_說明": "「找回小雞」宣傳影片劇本。底線開頭的欄位只是給人看的說明，工具不會讀。時間單位一律是「秒」。",
+  "_欄位說明": {
+    "type": "title = 片頭；solve = 看完後找出答案；ponder = 看完後只在小雞之間猶豫，不公布答案",
+    "seconds": "這一段在成品裡有幾秒。各段照順序接起來，開始時間自動計算",
+    "level": "錄第幾關。第 1 關 12 隻找 1 隻、第 8 關 15 隻找 3 隻、第 16 關 18 隻找 5 隻，越高跑得越快越久",
+    "watchSpeed": "前面「亮星星、小雞亂跑」的部分怎麼播。\"fit\" = 從亮星星看起，自動快轉到剛好塞得下；數字（例如 1.5）= 照這個倍速，只放得下停下來前的最後一段（觀眾會看不到星星）",
+    "introSec": "watchSpeed 是 \"fit\" 時可用：開頭「小雞頭上亮星星」在成品裡占幾秒，後面亂跑的部分自動快轉塞進剩下的時間。不寫 = 整段同一個倍速",
+    "thinkBeforeSec": "（solve）小雞停下來後先猶豫幾秒才開始點",
+    "tapGapSec": "（solve）點完一隻到點下一隻之間停幾秒",
+    "holdSec": "（solve）全部找到後停幾秒，最多 1.2（再久遊戲就跳下一關）",
+    "thinkSec": "（ponder）最後手指在小雞之間徘徊幾秒（原速）。影片結束時還沒有答案",
+    "caption": "字幕。startSec 寫 \"think\" = 開始徘徊時才出現，寫數字 = 這一段的第幾秒出現"
+  },
+
+  "game": "chicks",
+  "name": "找回小雞",
+
+  "output": { "width": 1080, "height": 1920, "fps": 30 },
+
+  "seed": 1127,
+  "_seed": "決定哪幾隻有星星、小雞怎麼跑。數字不變，重錄時一樣",
+
+  "sound": { "gameSfx": true, "musicFile": "", "musicVolume": 0.3 },
+  "finger": { "show": true, "tapRing": true },
+
+  "segments": [
+    {
+      "id": "demo",
+      "_說明": "0～5 秒：初級關卡，示範玩法",
+      "type": "solve",
+      "seconds": 5,
+      "level": 1,
+      "watchSpeed": "fit",
+      "introSec": 1.0,
+      "thinkBeforeSec": 0.3,
+      "holdSec": 1.0
+    },
+    {
+      "id": "title",
+      "_說明": "5～7 秒：片頭",
+      "type": "title",
+      "seconds": 2,
+      "title": "找回小雞",
+      "subtitle": "記住有星星的小雞，把牠們找回來！",
+      "background": "blur"
+    },
+    {
+      "id": "expert",
+      "_說明": "7～13 秒：高級關卡，找出答案",
+      "type": "solve",
+      "seconds": 6,
+      "level": 16,
+      "watchSpeed": "fit",
+      "introSec": 1.2,
+      "thinkBeforeSec": 0,
+      "tapGapSec": 0.05,
+      "holdSec": 0.7
+    },
+    {
+      "id": "challenge",
+      "_說明": "13～20 秒：中級關卡，不解開答案，讓觀眾自己猜",
+      "type": "ponder",
+      "seconds": 7,
+      "level": 8,
+      "watchSpeed": "fit",
+      "introSec": 1.5,
+      "thinkSec": 3,
+      "caption": { "text": "只有 3 %玩家能解開", "startSec": "think", "positionY": 0.065, "size": 100 }
+    }
+  ]
+}

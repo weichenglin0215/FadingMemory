@@ -9,7 +9,7 @@
 
 ### 👉 [立即開始玩](https://weichenglin0215.github.io/FadingMemory/) 👈
 
-目前版本 **V1.57.5.0**　｜　**194 款**小遊戲　｜　免安裝、免註冊　｜　[更新歷程與重點](GITHUB主要更新歷程.md)
+目前版本 **V1.57.6.0**　｜　**194 款**小遊戲　｜　免安裝、免註冊　｜　[更新歷程與重點](GITHUB主要更新歷程.md)
 
 </div>
 
@@ -374,17 +374,18 @@
 | 託管 | GitHub Pages（純靜態）。 |
 | 其他程式庫 | qrcodejs（分享 QR Code）、Google Fonts（Noto Sans TC／Noto Serif TC）。 |
 | 測試 | Node.js 純函式測試（每款遊戲一支 `t_<id>.js`）、PGlite（本機跑真的 PostgreSQL 測資料庫腳本）、看不見視窗的 Chrome／Edge 真的送滑鼠事件實測並截圖。 |
+| 宣傳影片 | `tools/video/`：讓電腦自己玩遊戲、照劇本錄成直式短片（Node＋看不見視窗的 Chrome／Edge＋ffmpeg）。目前有拖曳湊十、球在哪杯、找回小雞、數字方陣、乘法表抓錯 5 款的劇本，用法見 [`tools/video/README.md`](tools/video/README.md)。 |
 | AI 協作 | 以 [Claude Code](https://claude.com/claude-code) 協助企劃、實作與測試；遊戲點子、取捨與驗收由開發者決定。 |
 
 ## 開發過程
 
-專案從 2026-09-25 開始，到 11-20 約 56 天，共發佈 97 個版本。大致分五個階段：
+專案從 2026-09-25 開始，到 11-27 約 63 天，共發佈 99 個版本。大致分五個階段：
 
 1. **原型（09-25～26）**：先寫遊戲設計文件，做出「讀紙條、燒掉、答題」的 2D 原型，與 3D 的「回家的路」。
 2. **題目產生器（09-26～30）**：把固定題目改成每局不同的產生器，加上生日／旅遊／看病／聚餐四個故事主軸、回想題、答錯說明與混淆類型分析；改名「記憶模糊」。
 3. **小遊戲誕生（09-30～10-07）**：新增「秒反應」，從 3 款長到 50 款；接上世界排行榜。
 4. **爆量與社群（10-09～10-20）**：遊戲增加到 160 款；做出全螢幕選單、彈窗公版、玩家意見、五星評價、玩家帳號。
-5. **成熟營運（10-21～11-20）**：PWA 離線、漢堡選單、後台資料分析；補上不限時的邏輯遊戲（數獨、魔方陣、取火柴…），以及砲打飛機、草叢找動物、火箭回收、泡泡掃射、emoji選等動作遊戲，共 186 款。
+5. **成熟營運（10-21～11-27）**：PWA 離線、漢堡選單、後台資料分析；補上不限時的邏輯遊戲（數獨、魔方陣、取火柴…），以及砲打飛機、草叢找動物、火箭回收、泡泡掃射、emoji選等動作遊戲，之後再加上填滿路徑與數字方格遊戲、學歷階段，共 194 款；並做出宣傳影片錄影工具。
 
 **怎麼決定做哪些遊戲？** 我們先寫「新遊戲企劃」（見 [`note/`](note/)，累計幾百款構想），由開發者圈選要做的；上線後，**玩家在結算畫面留下的意見**成為改版的主要依據——例如一個遊戲「太簡單」「說明看不懂」「判定不公平」，就會在下個版本調整。至今已依玩家意見修改過上百款次遊戲。
 
@@ -582,6 +583,7 @@ test/reaction/                         「秒反應」純函式測試（node tes
 test/leaderboard/                      世界排行榜資料庫腳本測試（PGlite 在本機跑真的 PostgreSQL，另外 npm install）；gen_games_sql.cjs 從全部（160 款）遊戲檔案產生 MF_games 登記列；瀏覽器驗證小工具：fake_backend.js（假資料庫，全部遊戲通用）、browser_check.js（版面／點擊小工具）、browser_smoke.js（把遊戲放進 iframe 亂點到結算，確認有送榜）
 test/pwa/                              PWA 工具：gen_sw.cjs（產生／檢查 sw.js 的離線清單）、make_pwa_icons.mjs＋icon_art.html（用看不見視窗的 Edge 產生 icons/*.png）；測試是 test/reaction/t_pwa.js（manifest、頁面標籤、分享連結、清單同步、內建瀏覽器偵測、提示時機）與 t_sw.js（Service Worker 行為：離線、逾時、版本更新）
 test/admin/                            玩家意見查閱頁的測試（node test/admin/check_feedback_viewer.mjs：假的 Supabase 伺服器＋看不見視窗的 Chrome，不連真的資料庫）；後台資料分析頁的測試（node test/admin/check_stats_viewer.mjs，用 mock_stats_rpc.mjs 假的統計函式）
+tools/video/                           宣傳影片錄影工具（V1.57.6.0，開發者在電腦上用，**不是遊戲**，網站不會載入）：record.mjs（指令入口）、scripts/<遊戲>.json（可自己調的劇本）、lib/games/<遊戲>.mjs（各遊戲的自動玩家）；影片輸出在 out/（不進 git）
 vendor/three.min.js                    Three.js r158（MIT 授權）
 vendor/qrcode.min.js                   qrcodejs 1.0.0（MIT 授權，來自 cdnjs，sha512 與 cdnjs 公佈的一致）
 note/FadingMemory企劃書.md              企劃書（給人看）
